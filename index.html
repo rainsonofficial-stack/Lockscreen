@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Lockscreen</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+</head>
+<body>
+
+    <div id="setup-page" class="page">
+        <h2>System Setup</h2>
+        <div class="settings">
+            <label>Mode:</label>
+            <select id="lock-type">
+                <option value="pin4">4-Digit PIN</option>
+                <option value="pin6">6-Digit PIN</option>
+                <option value="password">Password</option>
+                <option value="pattern">3x3 Pattern</option>
+            </select>
+
+            <label>A) Success on Try #:</label>
+            <input type="number" id="success-try" value="1">
+            
+            <label>B) Peek Try #:</label>
+            <input type="number" id="peek-try" value="1">
+
+            <label>C) Cloud Send Try #:</label>
+            <input type="number" id="send-try" value="1">
+            
+            <label>Google Script URL:</label>
+            <input type="text" id="script-url" placeholder="https://script.google.com/...">
+        </div>
+        <button id="start-app">Initialize Lock</button>
+    </div>
+
+    <div id="lock-page" class="page hidden">
+        <div id="lock-bg"></div>
+        <div id="lock-container">
+            <h1 id="lock-status">Enter Passcode</h1>
+            
+            <div id="input-area">
+                <input type="text" id="pass-input" class="hidden" autocomplete="off" autocapitalize="off">
+                <canvas id="pattern-canvas" width="300" height="300" class="hidden"></canvas>
+            </div>
+            <button id="submit-btn" class="hidden">OK</button>
+        </div>
+        
+        <div id="secret-trigger"></div>
+        <canvas id="peek-display" width="60" height="60" class="hidden"></canvas>
+        <div id="active-dot"></div>
+    </div>
+
+    <div id="home-page" class="page hidden">
+        <div class="carousel">
+            <div class="slide"><img src="homepage1.jpg" alt="Home 1"></div>
+            <div class="slide"><img src="homepage2.jpg" alt="Home 2"></div>
+            <div class="slide"><img src="homepage3.jpg" alt="Home 3"></div>
+        </div>
+        <div id="secret-trigger-home"></div>
+    </div>
+
+    <audio id="unlock-sound" src="unlock.mp3"></audio>
+
+    <script src="script.js"></script>
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js');
+        }
+    </script>
+</body>
+</html>
