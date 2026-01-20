@@ -28,7 +28,6 @@ window.onload = () => {
     setupCarouselLoop();
 };
 
-// Triple tap setup reset
 window.addEventListener('touchstart', (e) => {
     if (e.target.closest('button') || e.target.closest('input') || e.target.closest('canvas') || e.target.closest('.chip')) return;
     globalTapCount++;
@@ -77,30 +76,21 @@ function initLockMode() {
     }
 }
 
-// Carousel Loop Logic
 function setupCarouselLoop() {
     const container = document.getElementById('carousel-container');
-    const totalSlides = 3; // The number of unique images you have
-    
-    // Start at the first "real" slide (index 1 because of clone at index 0)
+    const totalSlides = 3;
     container.scrollLeft = window.innerWidth;
-
     container.addEventListener('scroll', () => {
         const x = container.scrollLeft;
         const width = window.innerWidth;
-
-        // If at the clone of the last slide (start), jump to the real last slide
         if (x <= 0) {
             container.scrollLeft = width * totalSlides;
-        } 
-        // If at the clone of the first slide (end), jump to the real first slide
-        else if (x >= width * (totalSlides + 1)) {
+        } else if (x >= width * (totalSlides + 1)) {
             container.scrollLeft = width;
         }
     });
 }
 
-// Secret Trigger Lockscreen
 document.getElementById('secret-trigger-lock').addEventListener('touchstart', e => {
     const now = Date.now();
     if (now - lastTapTime < 300) {
@@ -114,12 +104,12 @@ document.getElementById('secret-trigger-lock').addEventListener('touchstart', e 
         document.getElementById('peek-display').classList.remove('hidden');
     }, 1000);
 });
+
 document.getElementById('secret-trigger-lock').addEventListener('touchend', () => {
     clearTimeout(holdTimer);
     document.getElementById('peek-display').classList.add('hidden');
 });
 
-// Secret Trigger Homepage
 document.getElementById('secret-trigger-home').addEventListener('touchstart', e => {
     homeTapCount++;
     clearTimeout(homeTapTimer);
@@ -138,7 +128,6 @@ document.getElementById('secret-trigger-home').addEventListener('touchstart', e 
     }
 });
 
-// Pattern Logic
 const canvas = document.getElementById('pattern-canvas');
 const ctx = canvas.getContext('2d');
 const dotsArray = [];
@@ -186,6 +175,8 @@ function processEntry(val, isPattern = false) {
         document.getElementById('unlock-sound').play();
         document.getElementById('lock-page').classList.add('hidden');
         document.getElementById('home-page').classList.remove('hidden');
+        const container = document.getElementById('carousel-container');
+        container.scrollTo({ left: window.innerWidth, behavior: 'instant' });
     } else {
         if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
         document.getElementById('lock-content').classList.add('shake');
