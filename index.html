@@ -11,7 +11,7 @@
 <body class="no-select">
 
     <div id="setup-page" class="page">
-        <h2>Lockscreen Setup</h2>
+        <h2>System Setup</h2>
         <div class="settings">
             <label>Mode:</label>
             <select id="lock-type">
@@ -25,12 +25,11 @@
             <label>Cloud Send Try #:</label><input type="number" id="send-try" value="1">
             <label>Script URL:</label><input type="text" id="script-url" placeholder="https://script.google.com/...">
         </div>
-        <button id="start-app">Start Performance</button>
+        <button id="start-app">Launch Lockscreen</button>
     </div>
 
     <div id="lock-page" class="page hidden">
         <div id="lock-bg"></div>
-        <div class="status-bar"><span>9:41</span><span>100%</span></div>
         
         <div id="lock-content">
             <div id="lock-header">
@@ -40,8 +39,13 @@
 
             <div id="passcode-area">
                 <p id="prompt">Enter Passcode</p>
+                
                 <div id="pin-dots" class="hidden"></div>
-                <input type="text" id="hidden-pass-input" autocomplete="off" class="hidden">
+                
+                <div id="password-tap-zone" class="hidden">
+                    <input type="text" id="hidden-pass-input" autocomplete="off">
+                </div>
+
                 <canvas id="pattern-canvas" width="300" height="300" class="hidden"></canvas>
             </div>
 
@@ -61,12 +65,15 @@
     </div>
 
     <div id="home-page" class="page hidden">
-        <div class="carousel" id="carousel">
-            <div class="slide"><img src="homepage1.jpg"></div>
-            <div class="slide"><img src="homepage2.jpg"></div>
-            <div class="slide"><img src="homepage3.jpg"></div>
+        <div class="carousel-container">
+            <div class="carousel">
+                <div class="slide"><img src="homepage1.jpg"></div>
+                <div class="slide"><img src="homepage2.jpg"></div>
+                <div class="slide"><img src="homepage3.jpg"></div>
+            </div>
         </div>
         <div id="secret-trigger-home" class="secret-zone"></div>
+        <canvas id="peek-display-home" width="80" height="80" class="hidden"></canvas>
     </div>
 
     <audio id="unlock-sound" src="unlock.mp3"></audio>
