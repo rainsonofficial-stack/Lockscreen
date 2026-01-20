@@ -25,15 +25,7 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 /* Authentic Status Bar */
 #home-status-bar { position: absolute; top: 0; width: 100%; height: 30px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; box-sizing: border-box; z-index: 100; color: white; }
 #home-status-bar .clock { font-size: 13px; font-weight: 600; letter-spacing: -0.2px; }
-.status-right { display: flex; align-items: center; gap: 5px; height: 100%; }
-
-/* Striped Signal Icon */
-.signal-striped { width: 16px; height: 10px; background: linear-gradient(to right, white 2px, transparent 2px); background-size: 4px 100%; display: flex; align-items: flex-end; }
-.signal-striped::before { content: ''; width: 100%; height: 100%; background: white; clip-path: polygon(0% 100%, 25% 100%, 25% 70%, 50% 70%, 50% 45%, 75% 45%, 75% 20%, 100% 20%, 100% 100%); }
-
-/* Striped WiFi Icon */
-.wifi-striped { width: 16px; height: 11px; position: relative; }
-.wifi-striped svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+.status-right { display: flex; align-items: center; gap: 6px; height: 100%; }
 
 /* Capsule Battery */
 .battery-ico { width: 22px; height: 10px; border: 1px solid rgba(255,255,255,0.4); border-radius: 4px; position: relative; padding: 1px; }
@@ -47,7 +39,7 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 .slide { width: 100vw; height: 100vh; scroll-snap-align: center; flex-shrink: 0; }
 .slide img { width: 100%; height: 100%; object-fit: cover; }
 
-/* Rest */
+/* Core elements */
 #pin-dots { display: flex; gap: 18px; margin-bottom: 30px; }
 .dot { width: 13px; height: 13px; border: 1.5px solid white; border-radius: 50%; }
 .dot.filled { background: white; }
