@@ -3,14 +3,45 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 .hidden { display: none !important; }
 .no-select { -webkit-touch-callout: none; -webkit-user-select: none; user-select: none; }
 
-#setup-page { background: #1c1c1e; color: white; padding: 20px; box-sizing: border-box; display: flex; flex-direction: column; }
-.settings input { width: 100%; padding: 12px; margin: 10px 0; background: #2c2c2e; border: none; color: white; border-radius: 10px; box-sizing: border-box; }
+/* Setup Page Fixes */
+#setup-page { 
+    background: #1c1c1e; 
+    color: white; 
+    padding: 20px; 
+    box-sizing: border-box; 
+    overflow-y: auto; /* Allows scrolling */
+    display: block;  /* Changed from flex to allow natural scrolling */
+}
+.settings input { width: 100%; padding: 12px; margin: 8px 0; background: #2c2c2e; border: none; color: white; border-radius: 10px; box-sizing: border-box; }
 
-.chip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 15px 0; }
-.chip { background: #2c2c2e; padding: 20px 10px; border-radius: 12px; text-align: center; font-size: 14px; border: 2px solid transparent; cursor: pointer; aspect-ratio: 1/1; display: flex; align-items: center; justify-content: center; }
+.chip-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 10px 0; }
+.chip { 
+    background: #2c2c2e; 
+    padding: 15px 5px; /* Reduced padding */
+    border-radius: 12px; 
+    text-align: center; 
+    font-size: 14px; 
+    border: 2px solid transparent; 
+    cursor: pointer; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center; 
+    min-height: 50px; /* Instead of aspect-ratio to save space */
+}
 .chip.active { background: #0a84ff; border-color: #54aaff; font-weight: bold; }
-#start-app { width: 100%; padding: 15px; background: #30d158; border: none; color: white; border-radius: 12px; font-size: 18px; font-weight: bold; margin-top: auto; margin-bottom: 20px; }
+#start-app { 
+    width: 100%; 
+    padding: 15px; 
+    background: #30d158; 
+    border: none; 
+    color: white; 
+    border-radius: 12px; 
+    font-size: 18px; 
+    font-weight: bold; 
+    margin: 20px 0 40px 0; /* Clear margin at bottom */
+}
 
+/* Lockscreen Visuals */
 #lock-bg { position: absolute; inset: 0; background: url('homescreen.jpg') center/cover; filter: blur(25px) brightness(0.7); z-index: -1; }
 #lock-content { display: flex; flex-direction: column; align-items: center; height: 100%; padding-top: 60px; }
 .clock { font-size: 80px; font-weight: 200; color: white; }
