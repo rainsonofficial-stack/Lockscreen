@@ -233,3 +233,4 @@ function updateTime() {
     const timeStr = `${hours}:${now.getMinutes().toString().padStart(2, '0')}`;
     document.querySelectorAll('.clock').forEach(el => el.innerText = timeStr);
 }
+
