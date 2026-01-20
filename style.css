@@ -25,13 +25,21 @@ body, html {
     user-select: none;
 }
 
-/* Setup Page */
+/* =========================
+   SETUP PAGE
+========================= */
 #setup-page {
     background: #1c1c1e;
     color: white;
     padding: 20px;
     box-sizing: border-box;
     overflow-y: auto;
+    z-index: 20;
+}
+
+/* Ensure setup page elements are interactive */
+#setup-page * {
+    pointer-events: auto;
 }
 
 .settings input {
@@ -44,7 +52,9 @@ body, html {
     border-radius: 10px;
 }
 
-/* Mode Chips */
+/* =========================
+   MODE CHIPS
+========================= */
 #mode-chips {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -66,7 +76,28 @@ body, html {
     color: black;
 }
 
-/* Lockscreen Visuals */
+/* =========================
+   LAUNCH BUTTON (FIXED)
+========================= */
+#start-app {
+    display: block;
+    width: 100%;
+    padding: 18px;
+    font-size: 16px;
+    margin-top: 40px;
+    border-radius: 14px;
+    background: white;
+    color: black;
+    border: none;
+    text-align: center;
+    position: relative;
+    z-index: 30;
+    pointer-events: auto;
+}
+
+/* =========================
+   LOCKSCREEN VISUALS
+========================= */
 #lock-bg {
     position: absolute;
     inset: 0;
@@ -102,7 +133,9 @@ body, html {
     text-align: center;
 }
 
-/* PIN */
+/* =========================
+   PIN
+========================= */
 #pin-dots {
     display: flex;
     gap: 18px;
@@ -148,7 +181,9 @@ body, html {
     letter-spacing: 1px;
 }
 
-/* Password */
+/* =========================
+   PASSWORD
+========================= */
 #password-tap-zone {
     width: 80%;
     height: 60px;
@@ -170,14 +205,18 @@ body, html {
     outline: none;
 }
 
-/* Pattern */
+/* =========================
+   PATTERN
+========================= */
 #pattern-canvas {
     display: block;
     touch-action: none;
     margin-top: -20px;
 }
 
-/* Secret Peek */
+/* =========================
+   SECRET PEEK
+========================= */
 .secret-zone {
     position: absolute;
     bottom: 0;
@@ -185,6 +224,7 @@ body, html {
     width: 120px;
     height: 120px;
     z-index: 2000;
+    -webkit-touch-callout: none;
 }
 
 #peek-display,
@@ -206,7 +246,9 @@ body, html {
     opacity: 0;
 }
 
-/* Carousel */
+/* =========================
+   CAROUSEL
+========================= */
 .carousel-container {
     width: 100%;
     height: 100%;
@@ -232,29 +274,19 @@ body, html {
     width: 100%;
     height: 100%;
     object-fit: cover;
+    -webkit-touch-callout: none;
+    user-select: none;
 }
 
+/* =========================
+   SHAKE
+========================= */
 .shake {
     animation: shake 0.4s;
 }
 
 @keyframes shake {
-    0%,100% { transform: translateX(0); }
-    20%,60% { transform: translateX(-10px); }
-    40%,80% { transform: translateX(10px); }
-}
-/* Launch button fix */
-#start-app {
-    width: 100%;
-    padding: 18px;
-    font-size: 16px;
-    margin-top: 40px;
-    border-radius: 14px;
-}
-
-/* Prevent browser image/context menu */
-img {
-    -webkit-touch-callout: none;
-    user-select: none;
-    pointer-events: none;
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-10px); }
+    40%, 80% { transform: translateX(10px); }
 }
