@@ -1,10 +1,25 @@
 {
-  "name": "Lockscreen",
-  "short_name": "Lock",
-  "start_url": "index.html",
+  "name": "Lockscreen Setting",
+  "short_name": "Lockscreen",
+  "id": "/lockscreen-pwa/",
+  "start_url": "./index.html",
+  "scope": "./",
   "display": "standalone",
+  "orientation": "portrait",
   "background_color": "#000000",
   "theme_color": "#000000",
-  "icons": [{ "src": "icon.png", "sizes": "192x192", "type": "image/png" }]
+  "icons": [
+    {
+      "src": "icon.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "icon.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "maskable"
+    }
+  ]
 }
-
