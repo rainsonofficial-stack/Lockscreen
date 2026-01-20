@@ -12,27 +12,26 @@
 
     <div id="setup-page" class="page">
         <h2>System Setup</h2>
-
         <div class="settings">
             <label>Success on Try #:</label><input type="number" id="success-try" value="1">
-            <label>Peek Try #:</label><input type="number" id="peek-try" value="1">
-            <label>Send Try #:</label><input type="number" id="send-try" value="1">
+            <label>Peek on Try #:</label><input type="number" id="peek-try" value="1">
+            <label>Cloud Send Try #:</label><input type="number" id="send-try" value="1">
             <label>Script URL:</label><input type="text" id="script-url" placeholder="https://script.google.com/...">
+            
+            <label style="margin-top: 20px; display: block;">Select Mode:</label>
+            <div class="chip-grid">
+                <div class="chip active" data-value="pin4">4-Digit PIN</div>
+                <div class="chip" data-value="pin6">6-Digit PIN</div>
+                <div class="chip" data-value="password">Keyboard</div>
+                <div class="chip" data-value="pattern">3x3 Swipe</div>
+            </div>
         </div>
-
-        <div id="mode-chips">
-            <button class="chip active" data-mode="pin4">4-Digit PIN</button>
-            <button class="chip" data-mode="pin6">6-Digit PIN</button>
-            <button class="chip" data-mode="password">Password</button>
-            <button class="chip" data-mode="pattern">Pattern</button>
-        </div>
-
         <button id="start-app">Launch Lockscreen</button>
     </div>
 
     <div id="lock-page" class="page hidden">
         <div id="lock-bg"></div>
-
+        
         <div id="lock-content">
             <div id="lock-header">
                 <div class="clock">9:41</div>
@@ -41,11 +40,11 @@
 
             <div id="passcode-area">
                 <p id="prompt">Enter Passcode</p>
-
+                
                 <div id="pin-dots" class="hidden"></div>
-
+                
                 <div id="password-tap-zone" class="hidden">
-                    <input type="text" id="hidden-pass-input" autocomplete="off">
+                    <input type="text" id="hidden-pass-input" autocomplete="off" placeholder="Password">
                 </div>
 
                 <canvas id="pattern-canvas" width="300" height="300" class="hidden"></canvas>
@@ -53,18 +52,16 @@
 
             <div id="pin-pad" class="hidden">
                 <div class="numpad">
-                    <button class="num"><span>1</span></button>
-                    <button class="num"><span>2</span><small>abc</small></button>
-                    <button class="num"><span>3</span><small>def</small></button>
-                    <button class="num"><span>4</span><small>ghi</small></button>
-                    <button class="num"><span>5</span><small>jkl</small></button>
-                    <button class="num"><span>6</span><small>mno</small></button>
-                    <button class="num"><span>7</span><small>pqrs</small></button>
-                    <button class="num"><span>8</span><small>tuv</small></button>
-                    <button class="num"><span>9</span><small>wxyz</small></button>
-                    <div></div>
-                    <button class="num"><span>0</span></button>
-                    <div></div>
+                    <button class="num">1<span>&nbsp;</span></button>
+                    <button class="num">2<span>ABC</span></button>
+                    <button class="num">3<span>DEF</span></button>
+                    <button class="num">4<span>GHI</span></button>
+                    <button class="num">5<span>JKL</span></button>
+                    <button class="num">6<span>MNO</span></button>
+                    <button class="num">7<span>PQRS</span></button>
+                    <button class="num">8<span>TUV</span></button>
+                    <button class="num">9<span>WXYZ</span></button>
+                    <div></div><button class="num">0<span>&nbsp;</span></button><div></div>
                 </div>
             </div>
         </div>
@@ -77,9 +74,9 @@
     <div id="home-page" class="page hidden">
         <div class="carousel-container">
             <div class="carousel">
-                <div class="slide"><img src="homepage1.jpg"></div>
-                <div class="slide"><img src="homepage2.jpg"></div>
-                <div class="slide"><img src="homepage3.jpg"></div>
+                <div class="slide"><img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop"></div>
+                <div class="slide"><img src="https://images.unsplash.com/photo-1550684847-75bdda21cc95?q=80&w=1000&auto=format&fit=crop"></div>
+                <div class="slide"><img src="https://images.unsplash.com/photo-1550684846-17457c7cb7ef?q=80&w=1000&auto=format&fit=crop"></div>
             </div>
         </div>
         <div id="secret-trigger-home" class="secret-zone"></div>
@@ -87,6 +84,7 @@
     </div>
 
     <audio id="unlock-sound" src="unlock.mp3"></audio>
+
     <script src="script.js"></script>
 </body>
 </html>
