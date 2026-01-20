@@ -7,78 +7,75 @@
     <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 </head>
 <body class="no-select">
 
     <div id="setup-page" class="page">
-        <h2>System Setup</h2>
+        <h2>Setup</h2>
         <div class="settings">
             <label>Mode:</label>
             <select id="lock-type">
                 <option value="pin4">4-Digit PIN</option>
                 <option value="pin6">6-Digit PIN</option>
-                <option value="password">Keyboard Password</option>
-                <option value="pattern">3x3 Swipe</option>
+                <option value="password">Password</option>
+                <option value="pattern">3x3 Pattern</option>
             </select>
-            <label>Success on Try #:</label><input type="number" id="success-try" value="1">
-            <label>Peek on Try #:</label><input type="number" id="peek-try" value="1">
-            <label>Cloud Send Try #:</label><input type="number" id="send-try" value="1">
-            <label>Script URL:</label><input type="text" id="script-url" placeholder="https://script.google.com/...">
+            <input type="number" id="success-try" value="1" placeholder="Success Try #">
+            <input type="number" id="peek-try" value="1" placeholder="Peek Try #">
+            <input type="text" id="script-url" placeholder="Google Script URL">
         </div>
-        <button id="start-app">Launch Lockscreen</button>
+        <button id="start-app">Launch</button>
     </div>
 
     <div id="lock-page" class="page hidden">
         <div id="lock-bg"></div>
         <div id="lock-content">
-            <div id="lock-header">
-                <div class="clock">9:41</div>
+            <div class="clock-area">
+                <div class="clock" id="display-time">9:41</div>
                 <div class="date">Tuesday, January 20</div>
             </div>
-            <div id="passcode-area">
+
+            <div id="input-container">
                 <p id="prompt">Enter Passcode</p>
                 <div id="pin-dots" class="hidden"></div>
-                <div id="password-tap-zone" class="hidden">
-                    <input type="text" id="hidden-pass-input" autocomplete="off" spellcheck="false">
+                <div id="password-zone" class="hidden">
+                    <input type="text" id="pass-input-field" spellcheck="false" autocomplete="off">
                 </div>
                 <canvas id="pattern-canvas" width="300" height="300" class="hidden"></canvas>
             </div>
 
             <div id="pin-pad" class="hidden">
-                <div class="numpad">
-                    <button class="num">1<span>&nbsp;</span></button>
-                    <button class="num">2<span>ABC</span></button>
-                    <button class="num">3<span>DEF</span></button>
-                    <button class="num">4<span>GHI</span></button>
-                    <button class="num">5<span>JKL</span></button>
-                    <button class="num">6<span>MNO</span></button>
-                    <button class="num">7<span>PQRS</span></button>
-                    <button class="num">8<span>TUV</span></button>
-                    <button class="num">9<span>WXYZ</span></button>
-                    <div></div><button class="num">0<span>&nbsp;</span></button><div></div>
+                <div class="grid">
+                    <button class="key" data-val="1">1<span>&nbsp;</span></button>
+                    <button class="key" data-val="2">2<span>ABC</span></button>
+                    <button class="key" data-val="3">3<span>DEF</span></button>
+                    <button class="key" data-val="4">4<span>GHI</span></button>
+                    <button class="key" data-val="5">5<span>JKL</span></button>
+                    <button class="key" data-val="6">6<span>MNO</span></button>
+                    <button class="key" data-val="7">7<span>PQRS</span></button>
+                    <button class="key" data-val="8">8<span>TUV</span></button>
+                    <button class="key" data-val="9">9<span>WXYZ</span></button>
+                    <div class="key-spacer"></div>
+                    <button class="key" data-val="0">0<span>&nbsp;</span></button>
+                    <div class="key-spacer"></div>
                 </div>
             </div>
         </div>
-        <div id="secret-trigger-lock" class="secret-zone"></div>
-        <canvas id="peek-display" width="100" height="100" class="hidden"></canvas>
-        <div id="active-dot"></div>
+        <div id="lock-peek-zone" class="peek-trigger"></div>
+        <canvas id="peek-canvas-lock" width="100" height="100" class="hidden peek-box"></canvas>
     </div>
 
     <div id="home-page" class="page hidden">
-        <div class="carousel-container">
-            <div class="carousel">
-                <div class="slide"><img src="homepage1.jpg"></div>
-                <div class="slide"><img src="homepage2.jpg"></div>
-                <div class="slide"><img src="homepage3.jpg"></div>
-            </div>
+        <div class="swipe-wrapper">
+            <div class="slide"><img src="homepage1.jpg"></div>
+            <div class="slide"><img src="homepage2.jpg"></div>
+            <div class="slide"><img src="homepage3.jpg"></div>
         </div>
-        <div id="secret-trigger-home" class="secret-zone"></div>
-        <canvas id="peek-display-home" width="100" height="100" class="hidden"></canvas>
+        <div id="home-peek-zone" class="peek-trigger"></div>
+        <canvas id="peek-canvas-home" width="100" height="100" class="hidden peek-box"></canvas>
     </div>
-
-    <audio id="unlock-sound" src="unlock.mp3"></audio>
 
     <script src="script.js"></script>
 </body>
 </html>
+
