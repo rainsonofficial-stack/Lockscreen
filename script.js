@@ -25,6 +25,7 @@ window.onload = () => {
     }
     updateTime();
     setInterval(updateTime, 5000);
+    setupCarouselLoop();
 };
 
 // Triple tap setup reset
@@ -67,7 +68,7 @@ function initLockMode() {
         passInput.onkeydown = (e) => {
             if (e.key === 'Enter') {
                 processEntry(passInput.value);
-                passInput.blur(); // Dismisses keyboard
+                passInput.blur();
             }
         };
     } else if (config.mode === 'pattern') {
@@ -76,7 +77,30 @@ function initLockMode() {
     }
 }
 
-// Secret Trigger Lockscreen (Tap for Force, Hold for Peek)
+// Carousel Loop Logic
+function setupCarouselLoop() {
+    const container = document.getElementById('carousel-container');
+    const totalSlides = 3; // The number of unique images you have
+    
+    // Start at the first "real" slide (index 1 because of clone at index 0)
+    container.scrollLeft = window.innerWidth;
+
+    container.addEventListener('scroll', () => {
+        const x = container.scrollLeft;
+        const width = window.innerWidth;
+
+        // If at the clone of the last slide (start), jump to the real last slide
+        if (x <= 0) {
+            container.scrollLeft = width * totalSlides;
+        } 
+        // If at the clone of the first slide (end), jump to the real first slide
+        else if (x >= width * (totalSlides + 1)) {
+            container.scrollLeft = width;
+        }
+    });
+}
+
+// Secret Trigger Lockscreen
 document.getElementById('secret-trigger-lock').addEventListener('touchstart', e => {
     const now = Date.now();
     if (now - lastTapTime < 300) {
@@ -95,7 +119,7 @@ document.getElementById('secret-trigger-lock').addEventListener('touchend', () =
     document.getElementById('peek-display').classList.add('hidden');
 });
 
-// Secret Trigger Homepage (Double Tap Toggle)
+// Secret Trigger Homepage
 document.getElementById('secret-trigger-home').addEventListener('touchstart', e => {
     homeTapCount++;
     clearTimeout(homeTapTimer);
@@ -215,6 +239,6 @@ function drawPeek(targetCanvasId) {
 function updateTime() {
     const now = new Date();
     let hours = now.getHours() % 12 || 12;
-    document.querySelector('.clock').innerText = `${hours}:${now.getMinutes().toString().padStart(2, '0')}`;
+    const timeStr = `${hours}:${now.getMinutes().toString().padStart(2, '0')}`;
+    document.querySelectorAll('.clock').forEach(el => el.innerText = timeStr);
 }
-
