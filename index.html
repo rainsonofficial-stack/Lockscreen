@@ -31,25 +31,19 @@
 
     <div id="lock-page" class="page hidden">
         <div id="lock-bg"></div>
-        
         <div id="lock-content">
             <div id="lock-header">
                 <div class="clock">9:41</div>
                 <div class="date">Tuesday, January 20</div>
             </div>
-
             <div id="passcode-area">
                 <p id="prompt">Enter Passcode</p>
-                
                 <div id="pin-dots" class="hidden"></div>
-                
                 <div id="password-tap-zone" class="hidden">
                     <input type="text" id="hidden-pass-input" autocomplete="off" placeholder="Password">
                 </div>
-
                 <canvas id="pattern-canvas" width="300" height="300" class="hidden"></canvas>
             </div>
-
             <div id="pin-pad" class="hidden">
                 <div class="numpad">
                     <button class="num">1<span>&nbsp;</span></button>
@@ -65,7 +59,6 @@
                 </div>
             </div>
         </div>
-
         <div id="secret-trigger-lock" class="secret-zone"></div>
         <canvas id="peek-display" width="80" height="80" class="hidden"></canvas>
         <div id="active-dot"></div>
@@ -74,9 +67,9 @@
     <div id="home-page" class="page hidden">
         <div class="carousel-container">
             <div class="carousel">
-                <div class="slide"><img src="https://images.unsplash.com/photo-1550684848-fac1c5b4e853?q=80&w=1000&auto=format&fit=crop"></div>
-                <div class="slide"><img src="https://images.unsplash.com/photo-1550684847-75bdda21cc95?q=80&w=1000&auto=format&fit=crop"></div>
-                <div class="slide"><img src="https://images.unsplash.com/photo-1550684846-17457c7cb7ef?q=80&w=1000&auto=format&fit=crop"></div>
+                <div class="slide"><img src="homepage1.jpg"></div>
+                <div class="slide"><img src="homepage2.jpg"></div>
+                <div class="slide"><img src="homepage3.jpg"></div>
             </div>
         </div>
         <div id="secret-trigger-home" class="secret-zone"></div>
@@ -84,7 +77,6 @@
     </div>
 
     <audio id="unlock-sound" src="unlock.mp3"></audio>
-
     <script src="script.js"></script>
 </body>
 </html>
