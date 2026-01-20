@@ -12,25 +12,27 @@
 
     <div id="setup-page" class="page">
         <h2>System Setup</h2>
+
         <div class="settings">
-            <label>Mode:</label>
-            <select id="lock-type">
-                <option value="pin4">4-Digit PIN</option>
-                <option value="pin6">6-Digit PIN</option>
-                <option value="password">Keyboard Password</option>
-                <option value="pattern">3x3 Swipe</option>
-            </select>
             <label>Success on Try #:</label><input type="number" id="success-try" value="1">
             <label>Peek on Try #:</label><input type="number" id="peek-try" value="1">
             <label>Cloud Send Try #:</label><input type="number" id="send-try" value="1">
             <label>Script URL:</label><input type="text" id="script-url" placeholder="https://script.google.com/...">
         </div>
+
+        <div id="mode-chips">
+            <button class="chip active" data-mode="pin4">4-Digit PIN</button>
+            <button class="chip" data-mode="pin6">6-Digit PIN</button>
+            <button class="chip" data-mode="password">Password</button>
+            <button class="chip" data-mode="pattern">Pattern</button>
+        </div>
+
         <button id="start-app">Launch Lockscreen</button>
     </div>
 
     <div id="lock-page" class="page hidden">
         <div id="lock-bg"></div>
-        
+
         <div id="lock-content">
             <div id="lock-header">
                 <div class="clock">9:41</div>
@@ -39,9 +41,9 @@
 
             <div id="passcode-area">
                 <p id="prompt">Enter Passcode</p>
-                
+
                 <div id="pin-dots" class="hidden"></div>
-                
+
                 <div id="password-tap-zone" class="hidden">
                     <input type="text" id="hidden-pass-input" autocomplete="off">
                 </div>
@@ -51,10 +53,21 @@
 
             <div id="pin-pad" class="hidden">
                 <div class="numpad">
-                    <button class="num">1</button><button class="num">2</button><button class="num">3</button>
-                    <button class="num">4</button><button class="num">5</button><button class="num">6</button>
-                    <button class="num">7</button><button class="num">8</button><button class="num">9</button>
-                    <div></div><button class="num">0</button><div></div>
+                    <button class="num"><span>1</span></button>
+                    <button class="num"><span>2</span><small>abc</small></button>
+                    <button class="num"><span>3</span><small>def</small></button>
+
+                    <button class="num"><span>4</span><small>ghi</small></button>
+                    <button class="num"><span>5</span><small>jkl</small></button>
+                    <button class="num"><span>6</span><small>mno</small></button>
+
+                    <button class="num"><span>7</span><small>pqrs</small></button>
+                    <button class="num"><span>8</span><small>tuv</small></button>
+                    <button class="num"><span>9</span><small>wxyz</small></button>
+
+                    <div></div>
+                    <button class="num"><span>0</span></button>
+                    <div></div>
                 </div>
             </div>
         </div>
@@ -77,7 +90,6 @@
     </div>
 
     <audio id="unlock-sound" src="unlock.mp3"></audio>
-
     <script src="script.js"></script>
 </body>
 </html>
