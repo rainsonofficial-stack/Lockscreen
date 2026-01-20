@@ -243,3 +243,18 @@ body, html {
     20%,60% { transform: translateX(-10px); }
     40%,80% { transform: translateX(10px); }
 }
+/* Launch button fix */
+#start-app {
+    width: 100%;
+    padding: 18px;
+    font-size: 16px;
+    margin-top: 40px;
+    border-radius: 14px;
+}
+
+/* Prevent browser image/context menu */
+img {
+    -webkit-touch-callout: none;
+    user-select: none;
+    pointer-events: none;
+}
