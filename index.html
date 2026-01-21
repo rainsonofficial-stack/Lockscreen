@@ -60,12 +60,18 @@
                     <button class="num">7<span>PQRS</span></button>
                     <button class="num">8<span>TUV</span></button>
                     <button class="num">9<span>WXYZ</span></button>
-                    <div></div><button class="num">0<span>&nbsp;</span></button><div></div>
+                    <div></div>
+                    <button class="num">0<span>&nbsp;</span></button>
+                    <button class="num" id="delete-btn">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                            <path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/>
+                        </svg>
+                    </button>
                 </div>
             </div>
         </div>
         <div id="secret-trigger-lock" class="secret-zone"></div>
-        <canvas id="peek-display" width="110" height="80" class="hidden"></canvas>
+        <canvas id="peek-display" class="hidden"></canvas>
         <div id="active-dot"></div>
     </div>
 
@@ -97,11 +103,10 @@
             </div>
         </div>
         <div id="secret-trigger-home" class="secret-zone"></div>
-        <canvas id="peek-display-home" width="110" height="80" class="hidden"></canvas>
+        <canvas id="peek-display-home" class="hidden"></canvas>
     </div>
 
     <audio id="unlock-sound" src="unlock.mp3"></audio>
     <script src="script.js"></script>
 </body>
 </html>
-
