@@ -1,3 +1,27 @@
+// --- ADD THIS TO THE VERY TOP OF script.js ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./sw.js')
+            .then(reg => {
+                // Check for updates every time the app is opened
+                reg.update();
+            });
+    });
+
+    // This part is CRUCIAL: It detects when you've updated sw.js 
+    // and refreshes the page automatically so you see your changes.
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+        if (!refreshing) {
+            window.location.reload();
+            refreshing = true;
+        }
+    });
+}
+// --- END OF REGISTRATION BLOCK ---
+
+// ... (rest of your existing code: let attemptCount = 0, etc.)
+
 let attemptCount = 0;
 let forceSuccess = false;
 let currentInput = "";
