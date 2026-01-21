@@ -1,7 +1,7 @@
 let attemptCount = 0;
 let forceSuccess = false;
 let currentInput = "";
-let peekStack = []; // History of tries
+let peekStack = []; 
 let lastTapTime = 0;
 let holdTimer;
 let globalTapCount = 0;
@@ -26,6 +26,14 @@ window.onload = () => {
     updateTime();
     setInterval(updateTime, 5000);
     setupCarouselLoop();
+
+    document.getElementById('delete-btn').addEventListener('click', () => {
+        if (currentInput.length > 0) {
+            currentInput = currentInput.slice(0, -1);
+            const dots = document.querySelectorAll('.dot');
+            if (dots[currentInput.length]) dots[currentInput.length].classList.remove('filled');
+        }
+    });
 };
 
 window.addEventListener('touchstart', (e) => {
@@ -67,6 +75,7 @@ function initLockMode() {
         passInput.onkeydown = (e) => {
             if (e.key === 'Enter') {
                 processEntry(passInput.value);
+                passInput.value = "";
                 passInput.blur();
             }
         };
@@ -143,37 +152,59 @@ function processEntry(val, isPattern = false) {
         setTimeout(() => document.getElementById('lock-content').classList.remove('shake'), 400);
         currentInput = "";
         document.querySelectorAll('.dot').forEach(d => d.classList.remove('filled'));
-        if(document.getElementById('hidden-pass-input')) document.getElementById('hidden-pass-input').value = "";
     }
 }
 
 function drawPeek(targetCanvasId) {
     const pCanvas = document.getElementById(targetCanvasId);
     const pCtx = pCanvas.getContext('2d');
-    const rowH = 35;
-    pCanvas.width = 110;
-    pCanvas.height = Math.max(40, peekStack.length * rowH + 10);
+    const rowH = 50;
+    const width = 140;
+    
+    pCanvas.width = width;
+    pCanvas.height = Math.max(60, peekStack.length * rowH + 15);
+    
     pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
 
     peekStack.forEach((item, idx) => {
         const yOff = idx * rowH;
-        pCtx.strokeStyle = "white"; pCtx.fillStyle = "white"; pCtx.lineWidth = 1.5;
-        pCtx.font = "12px Arial"; pCtx.textAlign = "left";
-        pCtx.fillText(`${item.attempt}.`, 8, yOff + 22);
+        pCtx.fillStyle = "white";
+        pCtx.font = "12px Arial";
+        pCtx.textAlign = "left";
+        pCtx.fillText(`${item.attempt}.`, 10, yOff + 30);
 
         if (item.isPattern) {
             item.data.forEach((id, i) => {
-                const x = (id % 3) * 8 + 30; const y = Math.floor(id / 3) * 8 + (yOff + 10);
+                const x = (id % 3) * 14 + 45; 
+                const y = Math.floor(id / 3) * 14 + (yOff + 12);
+                
                 if (i > 0) {
                     const prevId = item.data[i-1];
+                    const px = (prevId % 3) * 14 + 45;
+                    const py = Math.floor(prevId / 3) * 14 + (yOff + 12);
+                    
+                    pCtx.strokeStyle = "rgba(255,255,255,0.8)";
+                    pCtx.lineWidth = 2.5;
                     pCtx.beginPath();
-                    pCtx.moveTo((prevId % 3) * 8 + 30, Math.floor(prevId / 3) * 8 + (yOff + 10));
-                    pCtx.lineTo(x, y); pCtx.stroke();
+                    pCtx.moveTo(px, py);
+                    pCtx.lineTo(x, y);
+                    pCtx.stroke();
+                    
+                    const angle = Math.atan2(y - py, x - px);
+                    pCtx.beginPath();
+                    pCtx.moveTo(x, y);
+                    pCtx.lineTo(x - 6 * Math.cos(angle - Math.PI / 6), y - 6 * Math.sin(angle - Math.PI / 6));
+                    pCtx.lineTo(x - 6 * Math.cos(angle + Math.PI / 6), y - 6 * Math.sin(angle + Math.PI / 6));
+                    pCtx.closePath();
+                    pCtx.fill();
                 }
-                pCtx.beginPath(); pCtx.arc(x, y, 1, 0, Math.PI * 2); pCtx.fill();
+                pCtx.beginPath();
+                pCtx.arc(x, y, 2.5, 0, Math.PI * 2);
+                pCtx.fill();
             });
         } else {
-            pCtx.font = "bold 13px Courier New"; pCtx.fillText(item.data, 30, yOff + 22);
+            pCtx.font = "bold 15px Courier New";
+            pCtx.fillText(item.data, 40, yOff + 30);
         }
     });
 }
@@ -225,6 +256,7 @@ canvas.addEventListener('touchend', () => {
 
 document.querySelectorAll('.num').forEach(btn => {
     btn.addEventListener('click', () => {
+        if(btn.id === 'delete-btn') return;
         const val = btn.childNodes[0].textContent.trim();
         currentInput += val;
         const dots = document.querySelectorAll('.dot');
@@ -233,4 +265,3 @@ document.querySelectorAll('.num').forEach(btn => {
         if (currentInput.length === limit) setTimeout(() => processEntry(currentInput), 200);
     });
 });
-
