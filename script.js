@@ -64,12 +64,11 @@ document.getElementById('start-app').addEventListener('click', () => {
 });
 
 function initLockMode() {
+    const prompt = document.getElementById('prompt');
     ['pin-dots', 'pin-pad', 'password-tap-zone', 'pattern-canvas'].forEach(id => document.getElementById(id).classList.add('hidden'));
-    if (config.mode.startsWith('pin')) {
-        document.getElementById('pin-dots').innerHTML = '<div class="dot"></div>'.repeat(config.mode === 'pin4' ? 4 : 6);
-        document.getElementById('pin-dots').classList.remove('hidden');
-        document.getElementById('pin-pad').classList.remove('hidden');
-    } else if (config.mode === 'password') {
+    
+    if (config.mode === 'password') {
+        prompt.classList.add('hidden'); // Hide prompt for keyboard mode
         document.getElementById('password-tap-zone').classList.remove('hidden');
         const passInput = document.getElementById('hidden-pass-input');
         passInput.onkeydown = (e) => {
@@ -79,9 +78,16 @@ function initLockMode() {
                 passInput.blur();
             }
         };
-    } else if (config.mode === 'pattern') {
-        document.getElementById('pattern-canvas').classList.remove('hidden');
-        drawDots(); 
+    } else {
+        prompt.classList.remove('hidden');
+        if (config.mode.startsWith('pin')) {
+            document.getElementById('pin-dots').innerHTML = '<div class="dot"></div>'.repeat(config.mode === 'pin4' ? 4 : 6);
+            document.getElementById('pin-dots').classList.remove('hidden');
+            document.getElementById('pin-pad').classList.remove('hidden');
+        } else if (config.mode === 'pattern') {
+            document.getElementById('pattern-canvas').classList.remove('hidden');
+            drawDots(); 
+        }
     }
 }
 
@@ -158,39 +164,49 @@ function processEntry(val, isPattern = false) {
 function drawPeek(targetCanvasId) {
     const pCanvas = document.getElementById(targetCanvasId);
     const pCtx = pCanvas.getContext('2d');
-    const rowH = 50;
-    const width = 140;
+    const rowH = 55;
+    const width = 175;
     
     pCanvas.width = width;
     pCanvas.height = Math.max(60, peekStack.length * rowH + 15);
-    
     pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
 
     peekStack.forEach((item, idx) => {
         const yOff = idx * rowH;
         pCtx.fillStyle = "white";
-        pCtx.font = "12px Arial";
+        pCtx.font = "12px sans-serif";
         pCtx.textAlign = "left";
-        pCtx.fillText(`${item.attempt}.`, 10, yOff + 30);
+        pCtx.fillText(`${item.attempt}.`, 10, yOff + 32);
 
         if (item.isPattern) {
+            // Draw all 9 grid dots
+            for (let d = 0; d < 9; d++) {
+                const dx = (d % 3) * 14 + 45;
+                const dy = Math.floor(d / 3) * 14 + (yOff + 14);
+                pCtx.beginPath();
+                pCtx.arc(dx, dy, 1, 0, Math.PI * 2);
+                pCtx.fillStyle = "rgba(255,255,255,0.3)";
+                pCtx.fill();
+            }
+
             item.data.forEach((id, i) => {
                 const x = (id % 3) * 14 + 45; 
-                const y = Math.floor(id / 3) * 14 + (yOff + 12);
+                const y = Math.floor(id / 3) * 14 + (yOff + 14);
                 
                 if (i > 0) {
                     const prevId = item.data[i-1];
                     const px = (prevId % 3) * 14 + 45;
-                    const py = Math.floor(prevId / 3) * 14 + (yOff + 12);
+                    const py = Math.floor(prevId / 3) * 14 + (yOff + 14);
                     
-                    pCtx.strokeStyle = "rgba(255,255,255,0.8)";
-                    pCtx.lineWidth = 2.5;
+                    pCtx.strokeStyle = "rgba(255,255,255,0.4)";
+                    pCtx.lineWidth = 1; // Thinner line
                     pCtx.beginPath();
                     pCtx.moveTo(px, py);
                     pCtx.lineTo(x, y);
                     pCtx.stroke();
                     
                     const angle = Math.atan2(y - py, x - px);
+                    pCtx.fillStyle = "white";
                     pCtx.beginPath();
                     pCtx.moveTo(x, y);
                     pCtx.lineTo(x - 6 * Math.cos(angle - Math.PI / 6), y - 6 * Math.sin(angle - Math.PI / 6));
@@ -199,12 +215,21 @@ function drawPeek(targetCanvasId) {
                     pCtx.fill();
                 }
                 pCtx.beginPath();
-                pCtx.arc(x, y, 2.5, 0, Math.PI * 2);
+                pCtx.arc(x, y, 2, 0, Math.PI * 2);
+                pCtx.fillStyle = "white";
                 pCtx.fill();
             });
         } else {
-            pCtx.font = "bold 15px Courier New";
-            pCtx.fillText(item.data, 40, yOff + 30);
+            // Larger font with spacing
+            pCtx.font = "bold 18px sans-serif";
+            const text = item.data.toString();
+            let currentX = 40;
+            const letterSpacing = 5;
+
+            for (let i = 0; i < text.length; i++) {
+                pCtx.fillText(text[i], currentX, yOff + 35);
+                currentX += pCtx.measureText(text[i]).width + letterSpacing;
+            }
         }
     });
 }
@@ -265,3 +290,4 @@ document.querySelectorAll('.num').forEach(btn => {
         if (currentInput.length === limit) setTimeout(() => processEntry(currentInput), 200);
     });
 });
+
