@@ -164,7 +164,7 @@ function processEntry(val, isPattern = false) {
 function drawPeek(targetCanvasId) {
     const pCanvas = document.getElementById(targetCanvasId);
     const pCtx = pCanvas.getContext('2d');
-    const rowH = 35; // Tightened vertical spacing
+    const rowH = 35;
     const width = 175;
     
     pCanvas.width = width;
@@ -288,3 +288,4 @@ document.querySelectorAll('.num').forEach(btn => {
         if (currentInput.length === limit) setTimeout(() => processEntry(currentInput), 200);
     });
 });
+
