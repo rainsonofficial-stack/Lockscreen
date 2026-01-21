@@ -20,6 +20,10 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 .date { font-size: 20px; color: white; margin-top: 10px; }
 #prompt { color: white !important; font-size: 18px; margin-bottom: 20px; text-align: center; width: 100%; display: block; }
 
+/* Password Field (REVERTED TO BLURRED CAPSULE) */
+#password-tap-zone { width: 100%; display: flex; justify-content: center; }
+#hidden-pass-input { background: rgba(255,255,255,0.15); backdrop-filter: blur(15px); border: 1px solid rgba(255,255,255,0.2); border-radius: 25px; color: white; padding: 15px 25px; text-align: center; width: 80%; outline: none; font-size: 18px; }
+
 /* Status Bar */
 #home-status-bar { position: absolute; top: 0; width: 100%; height: 30px; display: flex; justify-content: space-between; align-items: center; padding: 0 16px; box-sizing: border-box; z-index: 100; color: white; }
 #home-status-bar .clock { font-size: 13px; font-weight: 600; letter-spacing: -0.2px; }
@@ -35,27 +39,17 @@ body, html { margin: 0; padding: 0; width: 100%; height: 100%; overflow: hidden;
 .slide { width: 100vw; height: 100vh; scroll-snap-align: center; flex-shrink: 0; }
 .slide img { width: 100%; height: 100%; object-fit: cover; }
 
-/* Peek Stack Display */
-#peek-display, #peek-display-home { 
-    position: absolute; 
-    bottom: 30px; 
-    left: 15px; 
-    z-index: 2001; 
-    pointer-events: none; 
-    background: rgba(0, 0, 0, 0.7); 
-    border-radius: 8px; 
-    padding: 5px;
-    width: 110px; 
-    border: 1px solid rgba(255, 255, 255, 0.2);
-}
+/* Peek Stack */
+#peek-display, #peek-display-home { position: absolute; bottom: 30px; left: 15px; z-index: 2001; pointer-events: none; background: rgba(0, 0, 0, 0.75); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.2); }
 
-/* Rest of UI */
-#pin-dots { display: flex; gap: 18px; margin-bottom: 30px; }
+/* Numpad & Core */
+#pin-dots { display: flex; gap: 18px; margin-bottom: 30px; height: 13px; }
 .dot { width: 13px; height: 13px; border: 1.5px solid white; border-radius: 50%; }
 .dot.filled { background: white; }
 .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-.num { width: 75px; height: 75px; border-radius: 50%; border: none; background: rgba(255,255,255,0.15); color: white; font-size: 28px; backdrop-filter: blur(15px); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; }
+.num { width: 75px; height: 75px; border-radius: 50%; border: none; background: rgba(255,255,255,0.15); color: white; font-size: 28px; backdrop-filter: blur(15px); display: flex; flex-direction: column; align-items: center; justify-content: center; line-height: 1; outline: none; }
 .num span { font-size: 10px; margin-top: 4px; opacity: 0.8; }
+#delete-btn { background: transparent !important; backdrop-filter: none !important; }
 #pattern-canvas { display: block; touch-action: none; margin-top: -20px; }
 .secret-zone { position: absolute; bottom: 0; right: 0; width: 120px; height: 120px; z-index: 2000; }
 #active-dot { position: absolute; bottom: 10px; right: 10px; width: 4px; height: 4px; background: white; opacity: 0; }
