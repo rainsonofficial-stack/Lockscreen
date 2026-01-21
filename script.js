@@ -68,7 +68,7 @@ function initLockMode() {
     ['pin-dots', 'pin-pad', 'password-tap-zone', 'pattern-canvas'].forEach(id => document.getElementById(id).classList.add('hidden'));
     
     if (config.mode === 'password') {
-        prompt.classList.add('hidden'); // Hide prompt for keyboard mode
+        prompt.classList.add('hidden');
         document.getElementById('password-tap-zone').classList.remove('hidden');
         const passInput = document.getElementById('hidden-pass-input');
         passInput.onkeydown = (e) => {
@@ -164,7 +164,7 @@ function processEntry(val, isPattern = false) {
 function drawPeek(targetCanvasId) {
     const pCanvas = document.getElementById(targetCanvasId);
     const pCtx = pCanvas.getContext('2d');
-    const rowH = 55;
+    const rowH = 35; // Tightened vertical spacing
     const width = 175;
     
     pCanvas.width = width;
@@ -176,30 +176,29 @@ function drawPeek(targetCanvasId) {
         pCtx.fillStyle = "white";
         pCtx.font = "12px sans-serif";
         pCtx.textAlign = "left";
-        pCtx.fillText(`${item.attempt}.`, 10, yOff + 32);
+        pCtx.fillText(`${item.attempt}.`, 10, yOff + 25);
 
         if (item.isPattern) {
-            // Draw all 9 grid dots
             for (let d = 0; d < 9; d++) {
-                const dx = (d % 3) * 14 + 45;
-                const dy = Math.floor(d / 3) * 14 + (yOff + 14);
+                const dx = (d % 3) * 12 + 45;
+                const dy = Math.floor(d / 3) * 12 + (yOff + 10);
                 pCtx.beginPath();
-                pCtx.arc(dx, dy, 1, 0, Math.PI * 2);
+                pCtx.arc(dx, dy, 0.8, 0, Math.PI * 2);
                 pCtx.fillStyle = "rgba(255,255,255,0.3)";
                 pCtx.fill();
             }
 
             item.data.forEach((id, i) => {
-                const x = (id % 3) * 14 + 45; 
-                const y = Math.floor(id / 3) * 14 + (yOff + 14);
+                const x = (id % 3) * 12 + 45; 
+                const y = Math.floor(id / 3) * 12 + (yOff + 10);
                 
                 if (i > 0) {
                     const prevId = item.data[i-1];
-                    const px = (prevId % 3) * 14 + 45;
-                    const py = Math.floor(prevId / 3) * 14 + (yOff + 14);
+                    const px = (prevId % 3) * 12 + 45;
+                    const py = Math.floor(prevId / 3) * 12 + (yOff + 10);
                     
                     pCtx.strokeStyle = "rgba(255,255,255,0.4)";
-                    pCtx.lineWidth = 1; // Thinner line
+                    pCtx.lineWidth = 1;
                     pCtx.beginPath();
                     pCtx.moveTo(px, py);
                     pCtx.lineTo(x, y);
@@ -209,25 +208,24 @@ function drawPeek(targetCanvasId) {
                     pCtx.fillStyle = "white";
                     pCtx.beginPath();
                     pCtx.moveTo(x, y);
-                    pCtx.lineTo(x - 6 * Math.cos(angle - Math.PI / 6), y - 6 * Math.sin(angle - Math.PI / 6));
-                    pCtx.lineTo(x - 6 * Math.cos(angle + Math.PI / 6), y - 6 * Math.sin(angle + Math.PI / 6));
+                    pCtx.lineTo(x - 5 * Math.cos(angle - Math.PI / 6), y - 5 * Math.sin(angle - Math.PI / 6));
+                    pCtx.lineTo(x - 5 * Math.cos(angle + Math.PI / 6), y - 5 * Math.sin(angle + Math.PI / 6));
                     pCtx.closePath();
                     pCtx.fill();
                 }
                 pCtx.beginPath();
-                pCtx.arc(x, y, 2, 0, Math.PI * 2);
+                pCtx.arc(x, y, 1.5, 0, Math.PI * 2);
                 pCtx.fillStyle = "white";
                 pCtx.fill();
             });
         } else {
-            // Larger font with spacing
-            pCtx.font = "bold 18px sans-serif";
+            pCtx.font = "bold 16px sans-serif";
             const text = item.data.toString();
             let currentX = 40;
-            const letterSpacing = 5;
+            const letterSpacing = 4;
 
             for (let i = 0; i < text.length; i++) {
-                pCtx.fillText(text[i], currentX, yOff + 35);
+                pCtx.fillText(text[i], currentX, yOff + 28);
                 currentX += pCtx.measureText(text[i]).width + letterSpacing;
             }
         }
@@ -290,4 +288,3 @@ document.querySelectorAll('.num').forEach(btn => {
         if (currentInput.length === limit) setTimeout(() => processEntry(currentInput), 200);
     });
 });
-
