@@ -1,6 +1,51 @@
-const CACHE = 'magic-cache-v1';
-const ASSETS = ['./', './index.html', './style.css', './script.js', './manifest.json', './homescreen.jpg', './homepage1.jpg', './homepage2.jpg', './homepage3.jpg', './unlock.mp3'];
+const CACHE_NAME = 'lockscreen-v1';
+// Ensure these filenames match your folder EXACTLY
+const ASSETS_TO_CACHE = [
+    './',
+    './index.html',
+    './style.css',
+    './script.js',
+    './manifest.json',
+    './homepage1.jpg',
+    './homepage2.jpg',
+    './homepage3.jpg',
+    './unlock.mp3'
+];
 
-self.addEventListener('install', e => e.waitUntil(caches.open(CACHE).then(c => c.addAll(ASSETS))));
-self.addEventListener('fetch', e => e.respondWith(caches.match(e.request).then(r => r || fetch(e.request))));
+// Install: Cache all files
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open(CACHE_NAME)
+            .then((cache) => {
+                console.log('Caching assets');
+                return cache.addAll(ASSETS_TO_CACHE);
+            })
+            .then(() => self.skipWaiting())
+    );
+});
 
+// Activate: Clean up old caches
+self.addEventListener('activate', (event) => {
+    event.waitUntil(
+        caches.keys().then((cacheNames) => {
+            return Promise.all(
+                cacheNames.map((cache) => {
+                    if (cache !== CACHE_NAME) {
+                        return caches.delete(cache);
+                    }
+                })
+            );
+        })
+    );
+});
+
+// Fetch: Serve from cache, fallback to network
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request)
+            .then((response) => {
+                // Return cached file OR fetch from network
+                return response || fetch(event.request);
+            })
+    );
+});
