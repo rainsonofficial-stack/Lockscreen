@@ -2,247 +2,112 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Calculator</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>Lockscreen</title>
+    <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
-    <meta name="theme-color" content="#000000">
-    <style>
-        :root {
-            --bg-color: #000;
-            --text-color: #fff;
-            --btn-gray: #333;
-            --btn-light-gray: #a5a5a5;
-            --accent-color: #ff9f0a;
-            --result-color: #888;
-            --base-font-size: 32px;
-            --final-font-size: 40px; 
-        }
-
-        body.android-theme { --accent-color: #2e7d32; }
-
-        * { box-sizing: border-box; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; user-select: none; }
-        body { margin: 0; background: var(--bg-color); color: var(--text-color); display: flex; flex-direction: column; height: 100vh; overflow: hidden; justify-content: flex-end; }
-        
-        #display-container { padding: 20px; text-align: right; display: flex; flex-direction: column; min-height: 160px; justify-content: flex-end; }
-        #history { font-size: 38px; color: #fff; min-height: 1.2em; word-wrap: break-word; font-weight: 400; letter-spacing: -1px; margin-bottom: 5px; }
-        #display { font-size: var(--base-font-size); font-weight: 300; color: var(--result-color); line-height: 1.2; transition: all 0.2s; }
-        
-        .grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; padding: 20px; z-index: 10; }
-        button { border: none; border-radius: 50%; height: 75px; width: 75px; font-size: 28px; cursor: pointer; background: var(--btn-gray); color: #fff; outline: none; display: flex; align-items: center; justify-content: center; transition: filter 0.1s; }
-        button:active { filter: brightness(1.3); }
-        
-        .btn-light { background: var(--btn-light-gray); color: #000; }
-        .btn-accent { background: var(--accent-color); }
-        .android-theme .btn-accent { background: var(--btn-light-gray); color: #000; }
-        .android-theme .btn-equal { background: var(--accent-color); color: #fff; }
-
-        #magic-indicator {
-            position: fixed;
-            bottom: 15px;
-            left: 15px;
-            width: 8px;
-            height: 8px;
-            background: rgba(128, 128, 128, 0.3);
-            border-radius: 50%;
-            display: none;
-            z-index: 100;
-        }
-
-        #settings { display: none; position: fixed; inset: 0; background: #1c1c1e; z-index: 1000; padding: 40px 20px; text-align: left; }
-        #settings input { width: 100%; padding: 15px; margin: 10px 0 20px; border-radius: 8px; border: none; font-size: 16px; background: #2c2c2e; color: white; }
-        .save-btn { background: #2e7d32; color: white; padding: 15px; width: 100%; border-radius: 8px; font-weight: bold; border: none; }
-    </style>
+    <meta name="apple-mobile-web-app-capable" content="yes">
 </head>
-<body id="body">
-    <div id="magic-indicator"></div>
+<body class="no-select">
 
-    <div id="settings">
-        <h2>Settings</h2>
-        <label>Force Number</label>
-        <input type="number" id="forceNumInput">
-        <label>Send Nth Number to Cloud</label>
-        <input type="number" id="cloudIndexInput">
-        <label>Google Script URL</label>
-        <input type="text" id="scriptUrlInput">
-        <button class="save-btn" onclick="saveSettings()">Save & Close</button>
+    <div id="setup-page" class="page">
+        <h2>System Setup</h2>
+        <div class="settings">
+            <label>Success on Try #:</label><input type="number" id="success-try" value="1">
+            <label style="display: none;">Peek on Try #:</label><input type="number" id="peek-try" value="1" style="display: none;">
+            <label>Cloud Send Try #:</label><input type="number" id="send-try" value="1">
+            <label>Script URL:</label><input type="text" id="script-url" placeholder="https://script.google.com/...">
+            
+            <label style="margin-top: 15px; display: block;">Select Mode:</label>
+            <div class="chip-grid">
+                <div class="chip active" data-value="pin4">4-Digit PIN</div>
+                <div class="chip" data-value="pin6">6-Digit PIN</div>
+                <div class="chip" data-value="password">Keyboard</div>
+                <div class="chip" data-value="pattern">3x3 Swipe</div>
+            </div>
+        </div>
+        <button id="start-app">Launch Lockscreen</button>
     </div>
 
-    <div id="display-container">
-        <div id="history"></div>
-        <div id="display">0</div>
+    <div id="lock-page" class="page hidden">
+        <div id="lock-bg"></div>
+        <div id="lock-content">
+            <div id="lock-header">
+                <div class="top-lock-icon">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                        <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zm-6 9c-1.1 0-2-.9-2-2s.9-2 2-2 2 .9 2 2-.9 2-2 2zm3.1-9H8.9V6c0-1.71 1.39-3.1 3.1-3.1 1.71 0 3.1 1.39 3.1 3.1v2z"/>
+                    </svg>
+                </div>
+                <div class="clock">9:41</div>
+                <div class="date">Tuesday, January 20</div>
+            </div>
+            <div id="passcode-area">
+                <p id="prompt">Enter Passcode</p>
+                <div id="pin-dots" class="hidden"></div>
+                <div id="password-tap-zone" class="hidden">
+    <input type="password" id="hidden-pass-input" autocomplete="off" placeholder="Password" enterkeyhint="done">
+</div>
+
+                <canvas id="pattern-canvas" width="300" height="300" class="hidden"></canvas>
+            </div>
+            <div id="pin-pad" class="hidden">
+                <div class="numpad">
+                    <button class="num">1<span>&nbsp;</span></button>
+                    <button class="num">2<span>ABC</span></button>
+                    <button class="num">3<span>DEF</span></button>
+                    <button class="num">4<span>GHI</span></button>
+                    <button class="num">5<span>JKL</span></button>
+                    <button class="num">6<span>MNO</span></button>
+                    <button class="num">7<span>PQRS</span></button>
+                    <button class="num">8<span>TUV</span></button>
+                    <button class="num">9<span>WXYZ</span></button>
+                    <div></div>
+                    <button class="num">0<span>&nbsp;</span></button>
+                    <button class="num" id="delete-btn">
+                        <svg width="28" height="28" viewBox="0 0 24 24" fill="white">
+                            <path d="M22 3H7c-.69 0-1.23.35-1.59.88L0 12l5.41 8.11c.36.53.9.89 1.59.89h15c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm-3 12.59L17.59 17 14 13.41 10.41 17 9 15.59 12.59 12 9 8.41 10.41 7 14 10.59 17.59 7 19 8.41 15.41 12 19 15.59z"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+        </div>
+        <div id="secret-trigger-lock" class="secret-zone"></div>
+        <canvas id="peek-display" class="hidden"></canvas>
+        <div id="active-dot"></div>
     </div>
 
-    <div class="grid">
-        <button class="btn-light" onclick="handlePress('back')">&#9003;</button>
-        <button class="btn-light" onclick="handlePress('AC')">AC</button>
-        <button class="btn-light" id="percentBtn">%</button>
-        <button class="btn-accent" onclick="handlePress('/')">&divide;</button>
-        
-        <button onclick="handlePress('7')">7</button>
-        <button onclick="handlePress('8')">8</button>
-        <button onclick="handlePress('9')">9</button>
-        <button class="btn-accent" onclick="handlePress('*')">&times;</button>
-        
-        <button onclick="handlePress('4')">4</button>
-        <button onclick="handlePress('5')">5</button>
-        <button onclick="handlePress('6')">6</button>
-        <button class="btn-accent" id="minusBtn" onpointerdown="startHold('-')" onpointerup="endHold()" onclick="handlePress('-')">&minus;</button>
-        
-        <button onclick="handlePress('1')">1</button>
-        <button onclick="handlePress('2')">2</button>
-        <button onclick="handlePress('3')">3</button>
-        <button class="btn-accent" id="plusBtn" onpointerdown="startHold('+')" onpointerup="endHold()" onclick="handlePress('+')">+</button>
-        
-        <button id="themeBtn">+/-</button>
-        <button onclick="handlePress('0')">0</button>
-        <button onclick="handlePress('.')">.</button>
-        <button class="btn-accent btn-equal" 
-                onpointerdown="startEqualHold()" 
-                onpointerup="endEqualHold()" 
-                onclick="handlePress('=')">=</button>
+    <div id="home-page" class="page hidden">
+        <div id="home-status-bar">
+            <div class="status-left clock">9:41</div>
+            <div class="status-right">
+                <svg width="17" height="17" viewBox="0 0 24 24" fill="white">
+                    <path d="M12.01 21.49L23.64 7c-.45-.34-4.93-4-11.64-4C5.28 3 .81 6.66.36 7l11.63 14.49.01.01.01-.01z" fill-opacity=".3"/>
+                    <path d="M4.07 11.63l7.93 9.87 7.93-9.87C19.53 11.31 16.28 9 12 9s-7.53 2.31-7.93 2.63z"/>
+                </svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="white">
+                    <path d="M2 22h20V2z" fill-opacity=".3"/>
+                    <path d="M17 7L2 22h15z"/>
+                </svg>
+                <div class="battery-ico">
+                    <div class="battery-level"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="carousel-container" id="carousel-container">
+            <div class="carousel" id="carousel">
+                <div class="slide"><img src="homepage3.jpg"></div>
+                <div class="slide"><img src="homepage1.jpg"></div>
+                <div class="slide"><img src="homepage2.jpg"></div>
+                <div class="slide"><img src="homepage3.jpg"></div>
+                <div class="slide"><img src="homepage1.jpg"></div>
+            </div>
+        </div>
+        <div id="secret-trigger-home" class="secret-zone"></div>
+        <canvas id="peek-display-home" class="hidden"></canvas>
     </div>
 
-    <script>
-        let currentInput = "";
-        let equationArr = [];
-        let magicMode = false;
-        let magicDigits = [];
-        let magicIndex = 0;
-        let holdTimer, equalHoldTimer;
-        let lastTappedOp = "";
-        let isFaceDown = false;
-
-        const config = JSON.parse(localStorage.getItem('calc_settings')) || { theme: 'ios', forceNum: "0", cloudIndex: 2, scriptUrl: '' };
-        const display = document.getElementById('display');
-        const historyDisplay = document.getElementById('history');
-        const indicator = document.getElementById('magic-indicator');
-
-        function subtleVibrate() {
-            if (navigator.vibrate) navigator.vibrate(15);
-        }
-
-        function activationPulse() {
-            if (navigator.vibrate) navigator.vibrate([20, 40, 20]);
-        }
-
-        window.addEventListener('click', (e) => {
-            if (magicMode) {
-                e.stopImmediatePropagation();
-                e.preventDefault();
-                if (magicIndex < magicDigits.length) {
-                    currentInput += magicDigits[magicIndex];
-                    magicIndex++;
-                    if (magicIndex >= magicDigits.length) indicator.style.display = 'none';
-                    updateUI();
-                    subtleVibrate();
-                }
-            }
-        }, true);
-
-        function triggerMagic() {
-            if (!magicMode) {
-                startMagicSetup();
-                if (magicDigits.length > 0) {
-                    magicMode = true;
-                    indicator.style.display = 'block'; 
-                    activationPulse();
-                }
-            }
-        }
-
-        function startHold(op) { holdTimer = setTimeout(() => { if (lastTappedOp === op) triggerMagic(); }, 1000); }
-        function endHold() { clearTimeout(holdTimer); }
-
-        function startEqualHold() { if (magicMode) equalHoldTimer = setTimeout(() => { magicMode = false; handlePress('='); }, 500); }
-        function endEqualHold() { clearTimeout(equalHoldTimer); }
-
-        function handlePress(val) {
-            subtleVibrate();
-            const currentTotal = getRunningTotal();
-            const target = parseFloat(config.forceNum);
-            if (val !== '=') { display.style.color = "var(--result-color)"; display.style.fontSize = "var(--base-font-size)"; }
-            if (val === 'AC') { currentInput = ""; equationArr = []; magicMode = false; lastTappedOp = ""; indicator.style.display = 'none'; }
-            else if (val === 'back') { currentInput = currentInput.slice(0, -1); }
-            else if (val === '=') {
-                sendToCloud();
-                let isMagicActive = (magicIndex > 0 || indicator.style.display === 'block');
-                let finalVal = isMagicActive ? config.forceNum : getRunningTotal();
-                historyDisplay.innerText = "";
-                display.innerText = finalVal;
-                display.style.color = "#ffffff"; 
-                display.style.fontSize = "var(--final-font-size)";
-                currentInput = finalVal.toString();
-                equationArr = [];
-                magicMode = false;
-                magicIndex = 0;
-                lastTappedOp = "";
-                indicator.style.display = 'none';
-                return;
-            } else if (['+', '-', '*', '/'].includes(val)) {
-                if ((val === '+' && target > currentTotal) || (val === '-' && target < currentTotal)) { startMagicSetup(); }
-                if (currentInput !== "") equationArr.push(currentInput);
-                let visualOp = val==='*'?'×':val==='/'?'÷':val==='-'?'−':'+';
-                if (equationArr.length > 0 && ['×','÷','−','+'].includes(equationArr[equationArr.length-1]) && currentInput === "") { equationArr[equationArr.length-1] = visualOp; }
-                else { equationArr.push(visualOp); }
-                currentInput = "";
-                lastTappedOp = val;
-            } else { currentInput += val; }
-            updateUI();
-        }
-
-        function getRunningTotal() {
-            try {
-                let str = (equationArr.join('') + currentInput).replace(/×/g, '*').replace(/÷/g, '/').replace(/−/g, '-');
-                if (!str) return 0;
-                if (/[\+\-\*\/]$/.test(str)) str = str.slice(0, -1);
-                return eval(str) || 0;
-            } catch { return 0; }
-        }
-
-        function updateUI() {
-            historyDisplay.innerText = equationArr.join('') + currentInput;
-            if (display.style.color !== "rgb(255, 255, 255)") { display.innerText = getRunningTotal(); }
-        }
-
-        function startMagicSetup() {
-            let running = getRunningTotal();
-            let diff = Math.abs(running - parseFloat(config.forceNum));
-            magicDigits = diff.toString().split('').filter(d => d !== '.');
-            magicIndex = 0;
-        }
-
-        window.addEventListener('deviceorientation', (e) => {
-            if (Math.abs(e.beta) > 160 && !isFaceDown) {
-                isFaceDown = true;
-                if (magicDigits.length > 0 && !magicMode) { triggerMagic(); }
-            } else if (Math.abs(e.beta) < 100) { isFaceDown = false; }
-        });
-
-        let themeClicks = 0, percentClicks = 0;
-        document.getElementById('themeBtn').onclick = () => { themeClicks++; if(themeClicks === 2) { config.theme = config.theme==='ios'?'android':'ios'; applyTheme(); saveSettings(); } setTimeout(()=>themeClicks=0, 400); };
-        document.getElementById('percentBtn').onclick = () => { percentClicks++; if(percentClicks === 2) document.getElementById('settings').style.display='block'; setTimeout(()=>percentClicks=0, 400); };
-        function applyTheme() { document.body.className = config.theme === 'android' ? 'android-theme' : ''; }
-        function saveSettings() {
-            config.forceNum = document.getElementById('forceNumInput').value || "0";
-            config.cloudIndex = document.getElementById('cloudIndexInput').value || 2;
-            config.scriptUrl = document.getElementById('scriptUrlInput').value || '';
-            localStorage.setItem('calc_settings', JSON.stringify(config));
-            document.getElementById('settings').style.display = 'none';
-            applyTheme();
-        }
-        async function sendToCloud() {
-            if (!config.scriptUrl) return;
-            let parts = [...equationArr, currentInput].filter(x => !['+','−','×','÷'].includes(x) && x !== "");
-            if (parts[config.cloudIndex - 1]) fetch(config.scriptUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify({ value: parts[config.cloudIndex - 1] }) });
-        }
-        applyTheme();
-        document.getElementById('forceNumInput').value = config.forceNum;
-        document.getElementById('cloudIndexInput').value = config.cloudIndex;
-        document.getElementById('scriptUrlInput').value = config.scriptUrl;
-
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js');
-        }
-    </script>
+    <audio id="unlock-sound" src="unlock.mp3"></audio>
+    <script src="script.js"></script>
 </body>
 </html>
