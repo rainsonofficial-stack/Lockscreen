@@ -1,4 +1,4 @@
-const CACHE_NAME = 'lockscreen-v1';
+const CACHE_NAME = 'lockscreen-v2';
 // Ensure these filenames match your folder EXACTLY
 const ASSETS_TO_CACHE = [
     './',
